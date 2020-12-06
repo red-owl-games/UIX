@@ -1,34 +1,38 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace RedOwl.UIX.Engine
 {
     public interface IGraph
     {
-        /*
         IEnumerable<INode> Nodes { get; }
-        IEnumerable<Connection> Connections { get; }
         void AddNode(INode node);
         void RemoveNode(INode node);
+        
+        IEnumerable<Connection> Connections { get; }
         void AddConnection(Connection connection);
         void RemoveConnection(string output, string input);
-        */
     }
 
+    [Node(Path = "RedOwl")]
     [Serializable]
     public abstract class Graph<T> : Node, IGraph where T : INode
     {
-        /*
-        [SerializeReference] private List<INode> _nodes;
-
-        [SerializeField] private List<Connection> _connections;
-        
+        [SerializeReference] 
+        private List<INode> _nodes;
         public IEnumerable<INode> Nodes => _nodes;
+        
+        [SerializeField]
+        private List<Connection> _connections;
         public IEnumerable<Connection> Connections => _connections;
+        
+        protected Graph()
+        {
+            _nodes = new List<INode>();
+            _connections = new List<Connection>();
+        }
+        
         public void AddNode(INode node) => _nodes.Add(node);
 
         public void RemoveNode(INode node)
@@ -50,17 +54,5 @@ namespace RedOwl.UIX.Engine
                 if (conn.Output == output && conn.Input == input) _connections.RemoveAt(i);
             }
         }
-
-        protected Graph()
-        {
-            _nodes = new List<INode>();
-            _connections = new List<Connection>();
-            _nodeCache = new NodeCache<T>();
-        }
-        */
-    }
-    
-    public class NullGraph : Graph<INode>, IGraph
-    {
     }
 }

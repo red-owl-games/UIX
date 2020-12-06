@@ -3,3 +3,6 @@ GridBackground#Grid {
     --thick-line-color: rgba(10, 10, 10, 0.7);
     --spacing: 20;
 }
+#contents #collapsible-area #extension {
+    background-color: rgba(46, 46, 46, 0.8);
+}

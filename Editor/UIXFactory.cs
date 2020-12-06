@@ -36,6 +36,7 @@ namespace RedOwl.UIX.Editor
         
         private VisualElement Build()
         {
+            // TODO: Re-add back field generation
             // if (_fieldType.GetInterface(nameof(IList)) != null)
             // {
             //     

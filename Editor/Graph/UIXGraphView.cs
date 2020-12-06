@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using RedOwl.UIX.Engine;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,13 +11,28 @@ using PortView = UnityEditor.Experimental.GraphView.Port;
 
 namespace RedOwl.UIX.Editor
 {
+    
     public class UIXGraphView : GraphView
     {
+        private SerializedObject _serializedGraph;
         private IGraph _graph;
+        public IGraph Graph => _graph;
+        
         private MiniMap _map;
+        private UIXGraphSearchProvider _search;
 
-        public UIXGraphView(IGraph graph)
+        public UIXGraphView(GraphAsset graph)
         {
+            if (graph == null)
+            {
+                CreateGridBackground();
+                return;
+            }
+            
+            // This is to prepare for Undo's
+            _serializedGraph = new SerializedObject(graph);
+            _graph = graph.Graph;
+
             UIXEditor.Setup(this);
             
             SetupZoom(ContentZoomer.DefaultMinScale * 0.5f, ContentZoomer.DefaultMaxScale);
@@ -26,8 +44,10 @@ namespace RedOwl.UIX.Editor
 
             CreateGridBackground();
             CreateMiniMap();
-            
-            Load(graph);
+            CreateSearch();
+
+            LoadNodes();
+            LoadConnections();
         }
         
         private void CreateGridBackground()
@@ -41,25 +61,31 @@ namespace RedOwl.UIX.Editor
             _map = new MiniMap {anchored = true, maxWidth = 200, maxHeight = 100, visible = false};
             Add(_map);
         }
-        
-        public void Load(IGraph graph)
+
+        private void CreateSearch()
         {
-            _graph = graph;
-            
-            /*
+            _search = ScriptableObject.CreateInstance<UIXGraphSearchProvider>();
+            _search.Initialize(this);
+            nodeCreationRequest = ctx => SearchWindow.Open(new SearchWindowContext(ctx.screenMousePosition), _search);
+        }
+
+        public void LoadNodes()
+        {
             foreach (var node in _graph.Nodes)
             {
                 CreateNodeView(node);
             }
+        }
 
+        public void LoadConnections()
+        {
             foreach (var connection in _graph.Connections)
             {
-                Debug.Log($"Creating connection {connection.Output} -> {connection.Input}");
+                //Debug.Log($"Creating connection {connection.Output} -> {connection.Input}");
                 CreateConnection(connection);
             }
-            */
         }
-        
+
         [Callback]
         private void GeometryChangedCallback(GeometryChangedEvent evt)
         {
@@ -74,7 +100,6 @@ namespace RedOwl.UIX.Editor
         
         private GraphViewChange OnGraphViewChanged(GraphViewChange change)
         {
-            /*
             if (change.elementsToRemove != null)
             {
                 foreach (var element in change.elementsToRemove)
@@ -89,10 +114,10 @@ namespace RedOwl.UIX.Editor
                             break;
                     }
 
-                    Debug.Log($"Removed GraphElement: {element.name} {element.title}");
+                    //Debug.Log($"Removed GraphElement: {element.name} {element.title}");
                 }
             }
-
+            
             if (change.movedElements != null)
             {
                 foreach (var element in change.movedElements)
@@ -100,7 +125,7 @@ namespace RedOwl.UIX.Editor
                     if (element is NodeView view) view.INode().Position = view.GetPosition().position;
                 }
             }
-
+            
             if (change.edgesToCreate != null)
             {
                 foreach (var edge in change.edgesToCreate)
@@ -112,34 +137,10 @@ namespace RedOwl.UIX.Editor
                     });
                 }
             }
-            */
+
             return change;
         }
-
-        /*
-
-        public void Clean()
-        {
-            DeleteElements(graphElements.ToList());
-        }
-
-        public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
-        {
-            base.BuildContextualMenu(evt);
-            var point = (evt.currentTarget as VisualElement).ChangeCoordinatesTo(contentViewContainer, evt.localMousePosition);
-            foreach (var possibleNode in _graph.PossibleNodes())
-            {
-                evt.menu.AppendAction(NodeAttribute.GetContextPath(possibleNode), a =>
-                {
-                    var node = (INode) Activator.CreateInstance(possibleNode);
-                    node.Id = Guid.NewGuid().ToString();
-                    node.Position = point;
-                    _graph.AddNode(node);
-                    CreateNodeView(node);
-                });
-            }
-        }
-
+        
         public override List<PortView> GetCompatiblePorts(PortView startPort, NodeAdapter nodeAdapter)
         {
             var compatible = new List<PortView>();
@@ -154,11 +155,20 @@ namespace RedOwl.UIX.Editor
             });
             return compatible;
         }
-
-        public void CreateNodeView<T>(T node) where T : INode
+        
+        internal void CreateNode(UIXNodeReflection data, Vector2 position)
         {
-            var view = new UIXNodeView(node);
-            AddElement(view);
+            var node = (INode)Activator.CreateInstance(data.Type);
+            var window = EditorWindow.GetWindow<UIXGraphWindow>();
+            node.Position = window.rootVisualElement.ChangeCoordinatesTo(contentViewContainer, position - window.position.position - new Vector2(3, 26));
+            _graph.AddNode(node);
+            CreateNodeView(node);
+        }
+
+        private void CreateNodeView<T>(T node) where T : INode
+        {
+            if (!UIXReflector.NodeCache.Get(node.GetType(), out var data)) return;
+            AddElement(new UIXNodeView(node, data));
         }
         
         private void CreateConnection(Connection connection)
@@ -178,6 +188,17 @@ namespace RedOwl.UIX.Editor
             var outputPort = output.outputContainer.Q<PortView>();
             AddElement(outputPort.ConnectTo(inputPort));
         }
+
+        /*
+
+        public void Clean()
+        {
+            DeleteElements(graphElements.ToList());
+        }
+
+
+        
+
         */
     }
 }

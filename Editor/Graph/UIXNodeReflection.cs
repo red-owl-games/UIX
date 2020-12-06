@@ -11,7 +11,7 @@ using PortView = UnityEditor.Experimental.GraphView.Port;
 
 namespace RedOwl.UIX.Editor
 {
-    public class PortReflection
+    public class UIXPortReflection
     {
         public FieldInfo Field { get; set; }
         
@@ -30,33 +30,22 @@ namespace RedOwl.UIX.Editor
         /// </summary>
         public bool IsUsingFieldName { get; set; }
 
-        public PortReflection(FieldInfo field, InputAttribute attr, Direction direction)
+        public UIXPortReflection(FieldInfo field, Direction direction, PortView.Capacity capacity, string name = null)
         {
             Field = field;
-            Name = attr.Name ?? field.Name;
+            Name = name ?? field.Name;
             Type = field.FieldType;
             Direction = direction;
-            Capacity = attr.Capacity;
+            Capacity = capacity;
             ShowElement = field.IsFamily;
-            IsUsingFieldName = attr.Name != null;
-        }
-
-        public PortReflection(FieldInfo field, OutputAttribute attr, Direction direction)
-        {
-            Field = field;
-            Name = attr.Name ?? field.Name;
-            Type = field.FieldType;
-            Direction = direction;
-            Capacity = attr.Capacity;
-            // TODO: And has corresponding "INPUT" ?
-            ShowElement = false;
-            IsUsingFieldName = attr.Name != null;
+            IsUsingFieldName = name != null;
         }
     }
 
-    public class NodeReflection : ITypeStorage
+    public class UIXNodeReflection : ITypeStorage
     {
         private static Type _isNodeAttribute = typeof(NodeAttribute);
+        private static Vector2 _defaultSize = new Vector2(100, 300);
         
         public Type Type { get; set; }
 
@@ -70,9 +59,11 @@ namespace RedOwl.UIX.Editor
 
         public bool Moveable { get; set; }
         
+        public Vector2 Size { get; set; }
+        
         public List<string> Tags { get; set; }
         
-        public List<PortReflection> Ports { get; set; }
+        public List<UIXPortReflection> Ports { get; set; }
         
         private Dictionary<ContextMenu, MethodInfo> _contextMethods;
         
@@ -87,18 +78,7 @@ namespace RedOwl.UIX.Editor
             ExtractPorts(type);
             ExtractContextMethods(type);
 
-            Debug.Log($"Caching Node '{Name}' '{string.Join("/", Path)}' | {Deletable} {Moveable}");
             return true;
-        }
-        
-        private void ExtractSettings(Type type)
-        {
-            Type = type;
-            Name = ObjectNames.NicifyVariableName(type.Name.Replace("Node", ""));
-            Path = new[]{ObjectNames.NicifyVariableName(type.Namespace)};
-            Help = "";
-            Deletable = true;
-            Moveable = true;
         }
 
         private void ExtractSettings(Type type, NodeAttribute attr)
@@ -110,6 +90,7 @@ namespace RedOwl.UIX.Editor
             Help = isNull ? "" : attr.Help;
             Deletable = isNull || attr.Deletable;
             Moveable = isNull || attr.Moveable;
+            Size = isNull ? _defaultSize : attr.Size;
         }
         
         private void ExtractTags(Type type)
@@ -124,8 +105,10 @@ namespace RedOwl.UIX.Editor
 
         private void ExtractPorts(Type type)
         {
-            Ports = new List<PortReflection>();
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            Ports = new List<UIXPortReflection>();
+            // This OrderBy sorts the fields by subclasses first
+            // we may want to put an "order" value or at least have InOut attributes process first so they are drawn first
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).OrderBy(field => field.MetadataToken);
             foreach (var field in fields)
             {
                 var attrs = field.GetCustomAttributes(true);
@@ -134,14 +117,20 @@ namespace RedOwl.UIX.Editor
                     switch (attr)
                     {
                         case InputAttribute input:
-                            Ports.Add(new PortReflection(field, input, Direction.Input));
+                            Ports.Add(new UIXPortReflection(field, Direction.Input, input.Capacity, input.Name));
                             break;
                         case OutputAttribute output:
-                            Ports.Add(new PortReflection(field, output, Direction.Output));
+                            Ports.Add(new UIXPortReflection(field, Direction.Output, output.Capacity, output.Name));
+                            break;
+                        case InOutAttribute inout:
+                            Ports.Add(new UIXPortReflection(field, Direction.Input, inout.InCapacity, inout.InName));
+                            Ports.Add(new UIXPortReflection(field, Direction.Output, inout.OutCapacity, inout.OutName));
                             break;
                     }
                 }
             }
+            // TODO: is this needed?
+            //Ports.Sort((a,b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         }
         
         private void ExtractContextMethods(Type type)
@@ -160,14 +149,14 @@ namespace RedOwl.UIX.Editor
 
     }
 
-    public static partial class Reflector
+    public static partial class UIXReflector
     {
-        private static readonly TypeCache<Node, NodeReflection> NodeCache = new TypeCache<Node, NodeReflection>();
+        public static readonly TypeCache<Node, UIXNodeReflection> NodeCache = new TypeCache<Node, UIXNodeReflection>();
 
-        [MenuItem("Project/Rebuild Cache")]
-        private static void RebuildCache()
-        {
-            NodeCache.ShouldBuildCache();
-        }
+        // [MenuItem("Project/Rebuild Cache")]
+        // private static void RebuildCache()
+        // {
+        //     NodeCache.ShouldBuildCache();
+        // }
     }
 }

@@ -1,33 +1,51 @@
-using System;
 using RedOwl.UIX.Engine;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 using NodeView = UnityEditor.Experimental.GraphView.Node;
 using PortView = UnityEditor.Experimental.GraphView.Port;
+using Edge = UnityEditor.Experimental.GraphView.Edge;
 
 namespace RedOwl.UIX.Editor
 {
     public class UIXNodeView : NodeView
     {
-        /*
         private INode Model => (INode) userData;
 
-        public UIXNodeView(INode model)
+        public UIXNodeView(INode node, UIXNodeReflection data)
         {
-            userData = model;
-            Init();
+            userData = node;
+            Initialize(data);
         }
 
-        public void Init()
+        private void Initialize(UIXNodeReflection data)
         {
-            title = NodeAttribute.GetTitle(Model.GetType());
-            SetPosition(new Rect(Model.Position, new Vector2(100, 100)));
-            CreateBody();
-            CreatePorts();
+            title = data.Name;
+            SetPosition(new Rect(Model.Position, data.Size));
 
+            CreateBody();
+            CreatePorts(data);
             RefreshExpandedState();
             RefreshPorts();
+        }
+        
+        private void CreateBody()
+        {
+            UIXEditor.DrawInto(Model, extensionContainer);
+        }
+        
+        private void CreatePorts(UIXNodeReflection data)
+        {
+            // TODO: a Custom UIXPortView might be needed to support things
+            foreach (var portData in data.Ports)
+            {
+                var port = PortView.Create<Edge>(Orientation.Horizontal, portData.Direction, portData.Capacity, portData.Type);
+                port.portName = portData.Name;
+                (portData.Direction == Direction.Input ? inputContainer : outputContainer).Add(port);
+            }
+        }
+        
+        /*
             
             RegisterCallback<ChangeEvent<string>>(evt =>
             {
@@ -41,37 +59,11 @@ namespace RedOwl.UIX.Editor
             {
                 Debug.Log($"Set Value {evt.previousValue} -> {evt.newValue} for {evt.target}");
             });
-        }
-
-        private void CreateBody()
-        {
-            UIXEditor.DrawInto(Model, extensionContainer);
-        }
-
-        private void CreatePorts()
-        {
-            Model.ForFieldWithType<INode, IPort>((info, field) =>
-            {
-                if (field is IValueInput)
-                {
-                    var p = PortView.Create<Edge>(field.Orientation, Direction.Input, field.Capacity, field.FieldType);
-                    p.portName = field.Name;
-                    inputContainer.Add(p);
-                }
-
-                if (field is IValueOutput)
-                {
-                    var p = PortView.Create<Edge>(field.Orientation, Direction.Output, field.Capacity, field.FieldType);
-                    p.portName = field.Name;
-                    outputContainer.Add(p);
-                }
-            });
-        }
         */
     }
     
     public static class NodeViewExtensions
     {
-        //public static INode INode(this NodeView self) => (INode) self.userData;
+        public static INode INode(this NodeView self) => (INode) self.userData;
     }
 }

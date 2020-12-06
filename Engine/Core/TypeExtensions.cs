@@ -58,16 +58,17 @@ namespace RedOwl.UIX.Engine
                 }
             }
         }
-        
-        public static IEnumerable<Type> GetAllTypes<T>()
+
+        public static IEnumerable<Type> GetAllTypes(Type match)
         {
-            var requestedType = typeof(T);
             foreach (var type in GetAllTypes())
             {
-                if (requestedType.IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
+                if (match.IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
                     yield return type;
             }
         }
+        
+        public static IEnumerable<Type> GetAllTypes<T>() => GetAllTypes(typeof(T));
 
         public static IEnumerable<MethodInfo> GetMethods<T>(T instance)
         {

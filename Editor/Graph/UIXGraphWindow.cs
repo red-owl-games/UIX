@@ -1,56 +1,69 @@
 using RedOwl.UIX.Engine;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace RedOwl.UIX.Editor
 {
+    
     [WindowTitle("Graph Editor")]
     [USS("UIXGraphWindow", true)]
     public class UIXGraphWindow : UIXEditorWindow
     {
-        private UIXGraphView _view;
-        
-        private void Load(IGraph graph)
-        {
-            _view = new UIXGraphView(graph);
-            _view.StretchToParentSize();
-            rootVisualElement.Add(_view);
-        }
-        
         #region AutoOpen
 
         [OnOpenAsset(0)]
         public static bool OnOpenAsset(int instanceID, int line)
         {
-            if (!(EditorUtility.InstanceIDToObject(instanceID) is GraphReference reference)) return false;
-            UIXEditor.Show<UIXGraphWindow>().Load(reference.Graph);
+            if (!(EditorUtility.InstanceIDToObject(instanceID) is GraphAsset reference)) return false;
+            UIXEditor.Show<UIXGraphWindow>().Load(reference);
             return true;
         }
 
         #endregion
-        /*
         
-        
+        [SerializeReference] private GraphAsset _lastGraph;
+        private UIXGraphView _view;
+
+        private Toolbar _toolbar;
+
         public override void OnEnable()
         {
             base.OnEnable();
+            Load(_lastGraph);
+        }
+
+        private void Load(GraphAsset asset)
+        {
+            if (asset == null) return;
+            _lastGraph = asset;
+            EditorUtility.SetDirty(_lastGraph);
+            Cleanup();
             CreateView();
             CreateToolbar();
         }
 
+        private void Cleanup()
+        {
+            if (_toolbar != null) rootVisualElement.Remove(_toolbar);
+            if (_view != null) rootVisualElement.Remove(_view);
+        }
+
+        private void CreateView()
+        {
+            _view = new UIXGraphView(_lastGraph);
+            rootVisualElement.Add(_view);
+            _view.StretchToParentSize();
+        }
+
         private void CreateToolbar()
         {
-            var toolbar = new Toolbar();
-            
-            // var clearBtn = new Button(() =>
-            // {
-            //     _view.Clean();
-            //     _view.Load(new CacophonyGraph());
-            // });
-            // clearBtn.text = "Clear";
-            // toolbar.Add(clearBtn);
+            _toolbar = new Toolbar();
+
+            // var clearBtn = new Button(() => { }) {text = "Clear"};
+            // _toolbar.Add(clearBtn);
             //
             // var saveBtn = new Button(() =>
             // {
@@ -68,20 +81,7 @@ namespace RedOwl.UIX.Editor
             // loadBtn.text = "Load";
             // toolbar.Add(loadBtn);
             
-            rootVisualElement.Add(toolbar);
+            rootVisualElement.Add(_toolbar);
         }
-
-        private void CreateView()
-        {
-            _view = new UIXGraphView(new T());
-            _view.StretchToParentSize();
-            rootVisualElement.Add(_view);
-        }
-
-        public override void OnDisable()
-        {
-            rootVisualElement.Remove(_view);
-        }
-        */
     }
 }

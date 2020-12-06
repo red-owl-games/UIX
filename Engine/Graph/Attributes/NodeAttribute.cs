@@ -1,5 +1,5 @@
 using System;
-using UnityEditor;
+using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
@@ -26,6 +26,8 @@ namespace RedOwl.UIX.Engine
         public bool Deletable { get; set; } = true;
         
         public bool Moveable { get; set; } = true;
+        
+        public Vector2 Size { get; set; } = new Vector2(100, 200);
         
         public NodeAttribute(string path = null, string name = null)
         {
