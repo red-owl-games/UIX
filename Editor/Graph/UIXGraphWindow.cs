@@ -17,14 +17,14 @@ namespace RedOwl.UIX.Editor
         [OnOpenAsset(0)]
         public static bool OnOpenAsset(int instanceID, int line)
         {
-            if (!(EditorUtility.InstanceIDToObject(instanceID) is GraphAsset reference)) return false;
+            if (!(EditorUtility.InstanceIDToObject(instanceID) is Graph reference)) return false;
             UIXEditor.Show<UIXGraphWindow>().Load(reference);
             return true;
         }
 
         #endregion
         
-        [SerializeReference] private GraphAsset _lastGraph;
+        [SerializeReference] private Graph _lastGraph;
         private UIXGraphView _view;
 
         private Toolbar _toolbar;
@@ -35,7 +35,7 @@ namespace RedOwl.UIX.Editor
             Load(_lastGraph);
         }
 
-        private void Load(GraphAsset asset)
+        private void Load(Graph asset)
         {
             if (asset == null) return;
             _lastGraph = asset;

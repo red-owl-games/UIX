@@ -1,13 +1,12 @@
 using System;
-using PortView = UnityEditor.Experimental.GraphView.Port;
 
 namespace RedOwl.UIX.Engine
 {
     /// <summary>
     /// An output port exposed on a Node.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-    public class OutputAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+    public class ValueOutAttribute : Attribute
     {
         /// <summary>
         /// Display name of the output slot.
@@ -19,7 +18,7 @@ namespace RedOwl.UIX.Engine
         /// <summary>
         /// Can this output go to multiple inputs at once.
         /// </summary>
-        public PortView.Capacity Capacity { get; set; }
+        public PortCapacity Capacity { get; set; } = PortCapacity.Multi;
 
         /// <summary>
         /// If defined as a class attribute, this is the output type.
@@ -28,7 +27,7 @@ namespace RedOwl.UIX.Engine
         /// </summary>
         public Type Type { get; set; }
 
-        public OutputAttribute(string name = null, Type type = null)
+        public ValueOutAttribute(string name = null, Type type = null)
         {
             Name = name;
             Type = type;

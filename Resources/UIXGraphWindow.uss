@@ -6,3 +6,37 @@ GridBackground#Grid {
 #contents #collapsible-area #extension {
     background-color: rgba(46, 46, 46, 0.8);
 }
+
+#OdinTree {
+    margin-top: 1px;
+    margin-bottom: 1px;
+    padding: 1px 0px 0px 0px;
+    background-color: rgba(63, 63, 63, 0.8);
+}
+
+#FlowPorts {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#FlowPorts > .typeControlPort {
+    --port-color: rgba(200, 117, 48, 1);
+}
+
+#FlowPorts.FlowInPorts > Port {
+    /*flex-direction: column;*/
+}
+
+#FlowPorts.FlowInPorts > .typeControlPort > #connector {
+    border-radius: 10px 10px 0 0;
+}
+
+#FlowPorts.FlowOutPorts > Port {
+    /* TODO: To make this work i think i'll need fix the port connector manipulator
+    flex-direction: row;
+    */
+}
+
+#FlowPorts.FlowOutPorts > .typeControlPort > #connector {
+    border-radius: 0 0 10px 10px;
+}

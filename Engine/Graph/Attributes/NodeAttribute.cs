@@ -23,16 +23,17 @@ namespace RedOwl.UIX.Engine
         /// </summary>
         public string Path { get; set; }
         
+        public string[] Tags { get; }
+        
         public bool Deletable { get; set; } = true;
         
         public bool Moveable { get; set; } = true;
         
         public Vector2 Size { get; set; } = new Vector2(100, 200);
         
-        public NodeAttribute(string path = null, string name = null)
+        public NodeAttribute(params string[] tags)
         {
-            Name = name;
-            Path = path;
+            Tags = tags;
         }
 
         // public static string GetContextPath(Type nodeType)

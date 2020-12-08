@@ -176,7 +176,7 @@ namespace RedOwl.UIX.Editor
 #if ODIN_INSPECTOR
             var tree = Sirenix.OdinInspector.Editor.PropertyTree.Create(instance);
             var useUndo = instance is Object;
-            element.Add(new IMGUIContainer(() => tree.Draw(useUndo)));
+            element.Add(new IMGUIContainer(() => tree.Draw(useUndo)) { name = "OdinTree"});
 #else
             foreach (var info in instance.GetType().GetFields())
             {

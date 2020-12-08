@@ -11,17 +11,16 @@ using PortView = UnityEditor.Experimental.GraphView.Port;
 
 namespace RedOwl.UIX.Editor
 {
-    
     public class UIXGraphView : GraphView
     {
         private SerializedObject _serializedGraph;
-        private IGraph _graph;
+        private readonly IGraph _graph;
         public IGraph Graph => _graph;
         
         private MiniMap _map;
         private UIXGraphSearchProvider _search;
 
-        public UIXGraphView(GraphAsset graph)
+        public UIXGraphView(Graph graph)
         {
             if (graph == null)
             {
@@ -31,7 +30,7 @@ namespace RedOwl.UIX.Editor
             
             // This is to prepare for Undo's
             _serializedGraph = new SerializedObject(graph);
-            _graph = graph.Graph;
+            _graph = (IGraph)graph;
 
             UIXEditor.Setup(this);
             
@@ -110,7 +109,7 @@ namespace RedOwl.UIX.Editor
                             _graph.RemoveNode(view.INode());
                             break;
                         case Edge edge:
-                            _graph.RemoveConnection(edge.output.node.INode().Id, edge.input.node.INode().Id);
+                            _graph.RemoveConnection(GetConnection(edge));
                             break;
                     }
 
@@ -130,15 +129,28 @@ namespace RedOwl.UIX.Editor
             {
                 foreach (var edge in change.edgesToCreate)
                 {
-                    _graph.AddConnection(new Connection
-                    {
-                        Input = edge.input.node.INode().Id,
-                        Output = edge.output.node.INode().Id,
-                    });
+                    _graph.AddConnection(GetConnection(edge));
                 }
             }
 
             return change;
+        }
+
+        private Connection GetConnection(Edge edge)
+        {
+            return new Connection
+            {
+                Input = new Slot
+                {
+                    Node = edge.input.node.Id(),
+                    Port = edge.input.Id()
+                },
+                Output = new Slot
+                {
+                    Node = edge.output.node.Id(),
+                    Port = edge.output.Id()
+                }
+            };
         }
         
         public override List<PortView> GetCompatiblePorts(PortView startPort, NodeAdapter nodeAdapter)
@@ -167,25 +179,18 @@ namespace RedOwl.UIX.Editor
 
         private void CreateNodeView<T>(T node) where T : INode
         {
-            if (!UIXReflector.NodeCache.Get(node.GetType(), out var data)) return;
+            if (!UIXGraphReflector.NodeCache.Get(node.GetType(), out var data)) return;
             AddElement(new UIXNodeView(node, data));
         }
         
         private void CreateConnection(Connection connection)
         {
-            NodeView input = null;
-            NodeView output = null;
-            foreach (var node in nodes.ToList())
-            {
-                INode model = (INode)node.userData;
-                if (model == null) continue;
-                if (model.Id == connection.Input) input = node;
-                if (model.Id == connection.Output) output = node;
-            }
-
+            NodeView input = this.Q<NodeView>(connection.Input.Node);
+            NodeView output = this.Q<NodeView>(connection.Output.Node);
             if (input == null || output == null) return;
-            var inputPort = input.inputContainer.Q<PortView>();
-            var outputPort = output.outputContainer.Q<PortView>();
+            var inputPort = input.Q<PortView>(connection.Input.Port.ToString());
+            var outputPort = output.Q<PortView>(connection.Output.Port.ToString());
+            if (inputPort == null || outputPort == null) return;
             AddElement(outputPort.ConnectTo(inputPort));
         }
 

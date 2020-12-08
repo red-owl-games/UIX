@@ -42,17 +42,16 @@ namespace RedOwl.UIX.Editor
     public class UIXGraphSearchProvider : ScriptableObject, ISearchWindowProvider
     {
         private UIXGraphView _view;
+        
+        private UIXGraphReflection _graphTypeData;
         private bool _useGraphTagMatching;
-        private HashSet<string> _graphTags;
 
         public void Initialize(UIXGraphView view)
         {
             _view = view;
-            // TODO: cache this?
-            var attr = _view.Graph.GetType().GetCustomAttribute<GraphAttribute>();
-            if (attr == null) return;
-            _useGraphTagMatching = true;
-            _graphTags = new HashSet<string>(attr.Tags);;
+            Debug.Log($"Find {_view.Graph.GetType()}");
+            bool found = UIXGraphReflector.GraphCache.Get(_view.Graph.GetType(), out _graphTypeData);
+            _useGraphTagMatching = found && _graphTypeData?.Tags.Count > 0;
         }
         
         public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
@@ -81,9 +80,9 @@ namespace RedOwl.UIX.Editor
         private IEnumerable<SearchGroup> GetSearchGroups()
         {
             Dictionary<SearchGroupKey, SearchGroup> groups = new Dictionary<SearchGroupKey, SearchGroup>();
-            foreach (var node in UIXReflector.NodeCache.All)
+            foreach (var node in UIXGraphReflector.NodeCache.All)
             {
-                if (_useGraphTagMatching && !_graphTags.IsSubsetOf(node.Tags)) continue;
+                if (_useGraphTagMatching && !_graphTypeData.Tags.Overlaps(node.Tags)) continue;
                 SearchGroup searchGroup = null;
                 int depth = 1;
                 

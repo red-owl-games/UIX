@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
@@ -36,9 +37,9 @@ namespace RedOwl.UIX.Engine
             return _cache.TryGetValue(type.SafeGetName(), out output);
         }
         
-        public void ShouldBuildCache()
+        public void ShouldBuildCache(bool force = false)
         {
-            if (_cache == null) BuildCache();
+            if (_cache == null || force) BuildCache();
         }
 
         private void BuildCache()
@@ -47,7 +48,11 @@ namespace RedOwl.UIX.Engine
             foreach (var type in TypeExtensions.GetAllTypes<T>())
             {
                 var storage = new TStorage();
-                if (storage.ShouldCache(type)) _cache.Add(type.SafeGetName(), storage);
+                if (storage.ShouldCache(type))
+                {
+                    //Debug.Log($"Caching '{type.SafeGetName()}'");
+                    _cache.Add(type.SafeGetName(), storage);
+                }
             }
         }
     }

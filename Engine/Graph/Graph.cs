@@ -6,19 +6,29 @@ namespace RedOwl.UIX.Engine
 {
     public interface IGraph
     {
+        IEnumerable<T> GetNodes<T>() where T : INode;
+        bool GetNode(string id, out INode node);
         IEnumerable<INode> Nodes { get; }
         void AddNode(INode node);
         void RemoveNode(INode node);
         
         IEnumerable<Connection> Connections { get; }
         void AddConnection(Connection connection);
-        void RemoveConnection(string output, string input);
+        void RemoveConnection(Connection connection);
     }
 
     [Node(Path = "RedOwl")]
     [Serializable]
-    public abstract class Graph<T> : Node, IGraph where T : INode
+    public abstract class Graph : ScriptableObject, IGraph //,INode
     {
+        [field: HideInInspector]
+        [field: SerializeField] 
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        
+        [field: HideInInspector]
+        [field: SerializeField]
+        public Vector2 Position { get; set; }
+        
         [SerializeReference] 
         private List<INode> _nodes;
         public IEnumerable<INode> Nodes => _nodes;
@@ -31,6 +41,28 @@ namespace RedOwl.UIX.Engine
         {
             _nodes = new List<INode>();
             _connections = new List<Connection>();
+        }
+
+        public IEnumerable<T> GetNodes<T>() where T : INode
+        {
+            var type = typeof(T);
+            foreach (var node in _nodes)
+            {
+                if (type.IsInstanceOfType(node)) yield return (T) node;
+            }
+        }
+
+        public bool GetNode(string id, out INode node)
+        {
+            foreach (var n in _nodes)
+            {
+                if (n.Id != id) continue;
+                node = n;    
+                return true;
+            }
+
+            node = null;
+            return false;
         }
         
         public void AddNode(INode node) => _nodes.Add(node);
@@ -46,12 +78,11 @@ namespace RedOwl.UIX.Engine
         
         public void AddConnection(Connection connection) => _connections.Add(connection);
 
-        public void RemoveConnection(string output, string input)
+        public void RemoveConnection(Connection connection)
         {
             for (int i = _connections.Count - 1; i >= 0; i--)
             {
-                var conn = _connections[i];
-                if (conn.Output == output && conn.Input == input) _connections.RemoveAt(i);
+                if (_connections[i].Id == connection.Id) _connections.RemoveAt(i);
             }
         }
     }

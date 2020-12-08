@@ -12,9 +12,9 @@ namespace RedOwl.UIX.Editor
             for (int i = propertyInfos.Count - 1; i >= 0; i--)
             {
                 var info = propertyInfos[i];
-                if (info.GetAttribute<InputAttribute>() != null) propertyInfos.RemoveAt(i);
-                if (info.GetAttribute<OutputAttribute>() != null) propertyInfos.RemoveAt(i);
-                if (info.GetAttribute<InOutAttribute>() != null) propertyInfos.RemoveAt(i);
+                if (info.GetAttribute<ValueInAttribute>() != null) propertyInfos.RemoveAt(i);
+                if (info.GetAttribute<ValueOutAttribute>() != null) propertyInfos.RemoveAt(i);
+                if (info.GetAttribute<ValueInOutAttribute>() != null) propertyInfos.RemoveAt(i);
             }
         }
     }
