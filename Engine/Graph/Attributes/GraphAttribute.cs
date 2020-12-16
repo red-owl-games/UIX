@@ -2,10 +2,10 @@ using System;
 
 namespace RedOwl.UIX.Engine
 {
-    [AttributeUsage(AttributeTargets.Class)]
-    public class GraphAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    public sealed class GraphAttribute : Attribute
     {
-        public string[] Tags { get; set; }
+        public string[] Tags { get; }
 
         public GraphAttribute(params string[] tags)
         {

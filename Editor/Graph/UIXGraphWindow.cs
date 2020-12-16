@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 
 namespace RedOwl.UIX.Editor
 {
-    
+    // TODO: what happens when we delete the GraphReference this is current viewing?!
     [WindowTitle("Graph Editor")]
     [USS("UIXGraphWindow", true)]
     public class UIXGraphWindow : UIXEditorWindow
@@ -17,14 +17,16 @@ namespace RedOwl.UIX.Editor
         [OnOpenAsset(0)]
         public static bool OnOpenAsset(int instanceID, int line)
         {
-            if (!(EditorUtility.InstanceIDToObject(instanceID) is Graph reference)) return false;
-            UIXEditor.Show<UIXGraphWindow>().Load(reference);
+            if (!(EditorUtility.InstanceIDToObject(instanceID) is GraphAsset asset)) return false;
+            UIXEditor.Show<UIXGraphWindow>().Load(asset);
             return true;
         }
+        
+        public static void Open(GraphAsset asset) => UIXEditor.Show<UIXGraphWindow>().Load(asset);
 
         #endregion
         
-        [SerializeReference] private Graph _lastGraph;
+        [SerializeReference] private GraphAsset _lastAsset;
         private UIXGraphView _view;
 
         private Toolbar _toolbar;
@@ -32,14 +34,34 @@ namespace RedOwl.UIX.Editor
         public override void OnEnable()
         {
             base.OnEnable();
-            Load(_lastGraph);
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+            Undo.undoRedoPerformed += Reload;
+            Reload();
         }
 
-        private void Load(Graph asset)
+        public override void OnDisable()
+        {
+            base.OnDisable();
+            Undo.undoRedoPerformed -= Reload;
+        }
+
+        private void Reload()
+        {
+            // TODO: this resets the view on undo/redo so we need to save the view "position"
+            Load(AssetDatabase.LoadAssetAtPath<GraphAsset>(AssetDatabase.GetAssetPath(_lastAsset)));
+        }
+
+        private void Load(GraphAsset asset)
         {
             if (asset == null) return;
-            _lastGraph = asset;
-            EditorUtility.SetDirty(_lastGraph);
+            if (_lastAsset != null)
+            {
+                EditorUtility.SetDirty(_lastAsset);
+                AssetDatabase.SaveAssets();
+            }
+            _lastAsset = asset;
+            EditorUtility.SetDirty(_lastAsset);
+            if (_lastAsset.graph == null) _lastAsset.graph = new Graph();
             Cleanup();
             CreateView();
             CreateToolbar();
@@ -53,7 +75,7 @@ namespace RedOwl.UIX.Editor
 
         private void CreateView()
         {
-            _view = new UIXGraphView(_lastGraph);
+            _view = new UIXGraphView(_lastAsset);
             rootVisualElement.Add(_view);
             _view.StretchToParentSize();
         }
@@ -62,16 +84,12 @@ namespace RedOwl.UIX.Editor
         {
             _toolbar = new Toolbar();
 
+            // TODO: Graph Window Toolbar
             // var clearBtn = new Button(() => { }) {text = "Clear"};
             // _toolbar.Add(clearBtn);
             //
-            // var saveBtn = new Button(() =>
-            // {
-            //     _save = JsonUtility.ToJson(_view.Save());
-            //     Debug.Log(_save);
-            // });
-            // saveBtn.text = "Save";
-            // toolbar.Add(saveBtn);
+            var saveBtn = new Button(_view.SaveAsset) {text = "Save"};
+            _toolbar.Add(saveBtn);
             //
             // var loadBtn = new Button(() =>
             // {

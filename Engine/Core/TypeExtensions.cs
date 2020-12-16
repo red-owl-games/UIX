@@ -95,7 +95,7 @@ namespace RedOwl.UIX.Engine
                 return support;
             }
 
-            support = to.IsAssignableFrom(from) || from.HasCastDefined(to, implicitly);
+            support = to.IsAssignableFrom(from) || from.HasCastDefined(to, implicitly) || typeof(string).IsAssignableFrom(to);
             CastableCache.Add(key, support);
             return support;
         }

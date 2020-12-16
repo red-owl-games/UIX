@@ -1,39 +1,32 @@
 using System;
+using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
     [Serializable]
-    public struct Slot
-    {
-        public string Node;
-        public uint Port;
-        
-        private int? _id;
+    public class PortCollection : BetterCollection<PortId> {}
 
-        public int Id
-        {
-            get
-            {
-                if (_id == null) _id = Node.GetHashCode() + Port.GetHashCode();
-                return (int)_id;
-            }
-        }
-    }
-    
     [Serializable]
-    public struct Connection
+    public class ConnectionsGraph : BetterDictionary<PortId, PortCollection>
     {
-        public Slot Output;
-        public Slot Input;
-
-        private int? _id;
-
-        public int Id
+        public void Connect(PortId output, PortId input)
         {
-            get
+            if (TryGetValue(output, out var collection))
             {
-                if (_id == null) _id = Output.Id + Input.Id;
-                return (int)_id;
+                collection.Add(input);
+                return;
+            }
+
+            collection = new PortCollection{input};
+            Add(output, collection);
+        }
+
+        public void Disconnect(PortId output, PortId input)
+        {
+            if (TryGetValue(output, out var collection))
+            {
+                collection.Remove(input);
+                this[output] = collection;
             }
         }
     }

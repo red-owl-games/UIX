@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
-    [AttributeUsage(AttributeTargets.Class)]
-    public class NodeAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    public sealed class NodeAttribute : Attribute
     {
         /// <summary>
         /// Display name of the node.
@@ -12,11 +12,8 @@ namespace RedOwl.UIX.Engine
         /// If not supplied, this will be inferred based on the class name.
         /// </summary>
         public string Name { get; set; }
-
-        /// <summary>
-        /// Tooltip help content displayed for the node.
-        /// </summary>
-        public string Help { get; set; }
+        
+        public string Tooltip { get; set; }
 
         /// <summary>
         /// Slash-delimited path to categorize this node in the search window.
@@ -35,19 +32,5 @@ namespace RedOwl.UIX.Engine
         {
             Tags = tags;
         }
-
-        // public static string GetContextPath(Type nodeType)
-        // {
-        //     return nodeType.TryGetAttr<NodeAttribute>(out var attr)
-        //         ? attr._contextMenuPath
-        //         : $"{ObjectNames.NicifyVariableName(nodeType.Namespace)}/{ObjectNames.NicifyVariableName(nodeType.Name).Replace("Node", "")}";
-        // }
-        //
-        // public static string GetTitle(Type nodeType)
-        // {
-        //     return nodeType.TryGetAttr<NodeAttribute>(out var attr)
-        //         ? attr._title
-        //         : ObjectNames.NicifyVariableName(nodeType.Name).Replace("Node", "");
-        // }
     }
 }

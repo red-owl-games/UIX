@@ -9,12 +9,17 @@ namespace RedOwl.UIX.Editor
     {
         public override void ProcessMemberProperties(List<InspectorPropertyInfo> propertyInfos)
         {
+            var match = typeof(Port);
             for (int i = propertyInfos.Count - 1; i >= 0; i--)
             {
                 var info = propertyInfos[i];
-                if (info.GetAttribute<ValueInAttribute>() != null) propertyInfos.RemoveAt(i);
-                if (info.GetAttribute<ValueOutAttribute>() != null) propertyInfos.RemoveAt(i);
-                if (info.GetAttribute<ValueInOutAttribute>() != null) propertyInfos.RemoveAt(i);
+                // TODO: is this better - so we don't have to flag things with attributes?
+                if (match.IsAssignableFrom(info.TypeOfValue)) propertyInfos.RemoveAt(i);
+                // if (info.GetAttribute<FlowInAttribute>() != null) propertyInfos.RemoveAt(i);
+                // if (info.GetAttribute<FlowOutAttribute>() != null) propertyInfos.RemoveAt(i);
+                // if (info.GetAttribute<ValueInAttribute>() != null) propertyInfos.RemoveAt(i);
+                // if (info.GetAttribute<ValueOutAttribute>() != null) propertyInfos.RemoveAt(i);
+                // if (info.GetAttribute<ValueInOutAttribute>() != null) propertyInfos.RemoveAt(i);
             }
         }
     }

@@ -2,15 +2,11 @@ using System;
 
 namespace RedOwl.UIX.Engine
 {
-    public class FlowInAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Field)]
+    public sealed class FlowInAttribute : Attribute
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null;
 
         public PortCapacity Capacity { get; set; } = PortCapacity.Multi;
-        
-        public FlowInAttribute(string name = null)
-        {
-            Name = name;
-        }
     }
 }

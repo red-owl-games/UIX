@@ -1,8 +1,13 @@
 namespace RedOwl.UIX.Engine
 {
-    [Node("Flow", Path = "Flow Control")]
+    [Node("Flow", Path = "Flow Control", Deletable = false, Moveable = false)]
     public class StartNode : Node
     {
-        [FlowOut] private ControlPort Start;
+        [FlowOut] public FlowPort Start;
+
+        public StartNode()
+        {
+            Start = new FlowPort(this);
+        }
     }
 }

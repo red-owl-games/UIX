@@ -5,12 +5,27 @@ namespace RedOwl.UIX.Engine
     [Node("Flow", Path = "Flow Control")]
     public class WhileNode : Node
     {
-        [ValueIn] public bool Condition { get; } = false;
+        [ValueIn] public ValuePort Condition;
         
-        [FlowIn]
-        private IEnumerable Enter(Flow flow)
+
+        [FlowIn] public FlowPort Enter;
+        [FlowOut] private FlowPort True;
+        [FlowOut] private FlowPort Exit;
+
+        public WhileNode()
         {
-            while (flow.Get(Condition))
+            Condition = new ValuePort<bool>(this, true);
+
+            Enter = new FlowPort(this, nameof(OnEnter));
+
+            True = new FlowPort(this);
+            Exit = new FlowPort(this);
+        }
+        
+        
+        private IEnumerable OnEnter(Flow flow)
+        {
+            while (flow.Get<bool>(Condition))
             {
                 yield return True;
             }
@@ -18,7 +33,6 @@ namespace RedOwl.UIX.Engine
             yield return Exit;
         }
 
-        [FlowOut] private ControlPort True;
-        [FlowOut] private ControlPort Exit;
+
     }
 }

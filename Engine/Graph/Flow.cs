@@ -1,129 +1,232 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
-    public struct ControlPort
+    public interface IFlow
     {
-    }
-    
-    public class Flow
-    {
-        private IGraph _graph;
-        private Dictionary<string, object> _cache;
+        T Get<T>(Port port);
+        bool Get<T>(Port port, out T output);
 
-        public Flow(IGraph graph)
+        void Set<T>(Port port, T value);
+    }
+
+    public class Flow : IFlow
+    {
+        private readonly BetterDictionary<PortId, object> _cache;
+        private IGraph _graph;
+        protected List<INode> _startNodes;
+
+        public Flow(IGraph graph, params INode[] startNodes)
         {
+            _cache = new BetterDictionary<PortId, object>();
             _graph = graph;
-            _cache = new Dictionary<string, object>();
+            _startNodes = new List<INode>(startNodes);
         }
-        
-        public T Get<T>(T store)
+
+        public T Get<T>(Port port)
         {
-            string key = "";
-            if (_cache.ContainsKey(key))
+            // TODO: use Converter.Convert ?
+            if (_cache.TryGetValue(port.Id, out var item))
             {
-                return (T) _cache[key];
+                return (T)item;
             }
             return default;
         }
 
-        public void Set<T>(T store, object value)
+        public bool Get<T>(Port port, out T output)
         {
-            string key = "";
-            if (_cache.ContainsKey(key))
+            // TODO: use Converter.Convert ?
+            if (_cache.TryGetValue(port.Id, out var item))
             {
-                _cache[key] = value;
+                output = (T) item;
+                return true;
+            }
+            output = default;
+            return false;
+        }
+
+        public void Set<T>(Port port, T value)
+        {
+            // TODO: use Converter.Convert ?
+            if (_cache.ContainsKey(port.Id))
+            {
+                _cache[port.Id] = value;
             }
             else
             {
-                _cache.Add(key, value);
+                _cache.Add(port.Id, value);
             }
         }
-        
-        public void Execute(StartNode start)
-        {
-            // foreach (var exit in GetFlowOutPorts(start))
-            // {
-            //     StartRoutine(start, exit);
-            // }
-            // For each ControlPort in 'start'
-            //    get connected port
-            //    
-            //    recursion
-            
-            // IExecutableNode next = root;
-            // int iterations = 0;
-            // while (next != null)
-            // {
-            //     next = next.Execute(data);
-            //
-            //     iterations++;
-            //     if (iterations > 2000)
-            //     {
-            //         Debug.LogError("Potential infinite loop detected. Stopping early.", this);
-            //         break;
-            //     }
-            // }
-        }
 
-        // private UIXFlowPortReflection GetFlowInPort(INode node, string id)
+        // public void Execute()
         // {
-        //     if (UIXGraphReflector.NodeCache.Get(node.GetType(), out var data))
+        //     _cache.Clear();
+        //     foreach (var node in _startNodes)
         //     {
-        //         foreach (var port in data.FlowPorts)
+        //         var enumerator = Run(node);
+        //         while(enumerator.MoveNext()) {}
+        //     }
+        // }
+        //
+        // public IEnumerator ExecuteAsync()
+        // {
+        //     _cache.Clear();
+        //     foreach (var node in _startNodes)
+        //     {
+        //         var enumerator = Run(node);
+        //         while (enumerator.MoveNext())
         //         {
-        //             if (port.Direction == PortDirection.Input) continue;
-        //             yield return port;
+        //             yield return enumerator.Current;
         //         }
         //     }
-        //     
+        //     yield break;
         // }
         //
-        // private IEnumerable<UIXFlowPortReflection> GetFlowOutPorts(INode node)
+        // private IEnumerator Run(INode node)
         // {
-        //     if (!UIXGraphReflector.NodeCache.Get(node.GetType(), out var data)) yield break;
-        //     foreach (var port in data.FlowPorts)
+        //     Debug.Log($"Executing Graph @ {node.GetType().FullName}|{node.Id}");
+        //     foreach (var connection in _graph.FlowConnections)
         //     {
-        //         if (port.Direction == PortDirection.Input) continue;
-        //         yield return port;
-        //     }
-        // }
-        //
-        // public IEnumerable Run(INode node, UIXFlowPortReflection port)
-        // {
-        //     if (GetConnection(node, port, out var connection))
-        //     {
-        //         if (_graph.GetNode(connection.Input.Node, out var other))
+        //         if (connection.Key.Node == node.Id)
         //         {
-        //             if (other.GetPort(connection.Input.Port, var)
+        //             yield return HandleFlowOutPort(connection.Key);
         //         }
         //     }
         // }
         //
-        // private bool GetConnection(INode node, UIXFlowPortReflection port, out Connection connection)
+        // private IEnumerator HandleFlowOutPort(PortId id)
         // {
-        //     foreach (var conn in _graph.Connections)
+        //     if (!_graph.Get(id.Node, out var node)) yield break;
+        //     
+        //     var port = node.GetFlowPort(id.Port);
+        //     var enumerator = ExecutePort(port).GetEnumerator();
+        //     while (enumerator.MoveNext())
         //     {
-        //         if (conn.Output.Node != node.Id) continue;
-        //         if (conn.Output.Port != port.Hash) continue;
-        //         //Found the right connection
-        //         connection = conn;
-        //         return true;
+        //         yield return enumerator.Current;
         //     }
-        //
-        //     connection = default;
-        //     return false;
+        //     foreach (var connected in _graph.FlowConnections[id])
+        //     {
+        //         yield return HandleFlowInPort(connected);
+        //     }
         // }
         //
-        public void StartRoutine(INode startNode, ControlPort exit, float interval = 1f)
-        {
-            
-        }
-
-        // public void StartRoutine(INode start, UIXFlowPortReflection exit, float interval = 1f)
+        // private IEnumerator HandleFlowInPort(PortId id)
         // {
-        //     
+        //     if (!_graph.Get(id.Node, out var node)) yield break;
+        //     // Walk Nodes Value Ports to ensure data is present upon FlowInPort execute
+        //     var port = node.GetFlowPort(id.Port);
+        //     var enumerator = ExecutePort(port).GetEnumerator();
+        //     while (enumerator.MoveNext())
+        //     {
+        //         yield return HandleFlowOutPort(enumerator.Current);
+        //     }
+        // }
+        //
+        // private IEnumerable<FlowPort> ExecutePort(FlowPort port)
+        // {
+        //     Debug.Log($"Executing Port @ {port}");
+        //     yield break;
         // }
     }
+
+    public class Flow<T> : Flow where T : INode
+    {
+        public Flow(IGraph graph) : base(graph)
+        {
+            _startNodes = new List<T>(graph.GetNodes<T>()).ConvertAll(x => (INode)x);
+        }
+    }
 }
+//     
+//     public class Flow
+//     {
+
+//         
+//         public void Execute(StartNode start)
+//         {
+//             // foreach (var exit in GetFlowOutPorts(start))
+//             // {
+//             //     StartRoutine(start, exit);
+//             // }
+//             // For each ControlPort in 'start'
+//             //    get connected port
+//             //    
+//             //    recursion
+//             
+//             // IExecutableNode next = root;
+//             // int iterations = 0;
+//             // while (next != null)
+//             // {
+//             //     next = next.Execute(data);
+//             //
+//             //     iterations++;
+//             //     if (iterations > 2000)
+//             //     {
+//             //         Debug.LogError("Potential infinite loop detected. Stopping early.", this);
+//             //         break;
+//             //     }
+//             // }
+//         }
+//
+//         // private UIXFlowPortReflection GetFlowInPort(INode node, string id)
+//         // {
+//         //     if (UIXGraphReflector.NodeCache.Get(node.GetType(), out var data))
+//         //     {
+//         //         foreach (var port in data.FlowPorts)
+//         //         {
+//         //             if (port.Direction == PortDirection.Input) continue;
+//         //             yield return port;
+//         //         }
+//         //     }
+//         //     
+//         // }
+//         //
+//         // private IEnumerable<UIXFlowPortReflection> GetFlowOutPorts(INode node)
+//         // {
+//         //     if (!UIXGraphReflector.NodeCache.Get(node.GetType(), out var data)) yield break;
+//         //     foreach (var port in data.FlowPorts)
+//         //     {
+//         //         if (port.Direction == PortDirection.Input) continue;
+//         //         yield return port;
+//         //     }
+//         // }
+//         //
+//         // public IEnumerable Run(INode node, UIXFlowPortReflection port)
+//         // {
+//         //     if (GetConnection(node, port, out var connection))
+//         //     {
+//         //         if (_graph.GetNode(connection.Input.Node, out var other))
+//         //         {
+//         //             if (other.GetPort(connection.Input.Port, var)
+//         //         }
+//         //     }
+//         // }
+//         //
+//         // private bool GetConnection(INode node, UIXFlowPortReflection port, out Connection connection)
+//         // {
+//         //     foreach (var conn in _graph.Connections)
+//         //     {
+//         //         if (conn.Output.Node != node.Id) continue;
+//         //         if (conn.Output.Port != port.Hash) continue;
+//         //         //Found the right connection
+//         //         connection = conn;
+//         //         return true;
+//         //     }
+//         //
+//         //     connection = default;
+//         //     return false;
+//         // }
+//         //
+//         public void StartRoutine(INode startNode, ControlPort exit, float interval = 1f)
+//         {
+//             
+//         }
+//
+//         // public void StartRoutine(INode start, UIXFlowPortReflection exit, float interval = 1f)
+//         // {
+//         //     
+//         // }
+//     }
+// }

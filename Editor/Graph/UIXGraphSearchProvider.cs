@@ -49,7 +49,6 @@ namespace RedOwl.UIX.Editor
         public void Initialize(UIXGraphView view)
         {
             _view = view;
-            Debug.Log($"Find {_view.Graph.GetType()}");
             bool found = UIXGraphReflector.GraphCache.Get(_view.Graph.GetType(), out _graphTypeData);
             _useGraphTagMatching = found && _graphTypeData?.Tags.Count > 0;
         }

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
@@ -5,9 +6,17 @@ namespace RedOwl.UIX.Engine
     [Node("Common", Path = "Common")]
     public class LogNode : Node
     {
-        [ValueIn] public float Message { get; } = 0;
+        [ValueIn] public ValuePort Message;
         
-        [FlowIn]
-        private void Enter(Flow flow) => Debug.Log(flow.Get(Message));
+        [FlowIn] public FlowPort Enter;
+
+        public LogNode() : this("") {}
+        public LogNode(string defaultMessage = "")
+        {
+            Message = new ValuePort<string>(this, defaultMessage);
+            Enter = new FlowPort(this, nameof(OnEnter));
+        }
+
+        private void OnEnter(IFlow flow) => Debug.Log(flow.Get<string>(Message));
     }
 }

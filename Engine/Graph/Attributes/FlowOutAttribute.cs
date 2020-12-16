@@ -2,15 +2,11 @@ using System;
 
 namespace RedOwl.UIX.Engine
 {
-    public class FlowOutAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Field)]
+    public sealed class FlowOutAttribute : Attribute
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null;
 
         public PortCapacity Capacity { get; set; } = PortCapacity.Multi;
-        
-        public FlowOutAttribute(string name = null)
-        {
-            Name = name;
-        }
     }
 }
