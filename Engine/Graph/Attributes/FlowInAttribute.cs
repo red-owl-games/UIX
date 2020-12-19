@@ -6,7 +6,8 @@ namespace RedOwl.UIX.Engine
     public sealed class FlowInAttribute : Attribute
     {
         public string Name { get; set; } = null;
-
         public PortCapacity Capacity { get; set; } = PortCapacity.Multi;
+        
+        public string Callback { get; set; } = null;
     }
 }

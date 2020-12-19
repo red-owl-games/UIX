@@ -10,20 +10,20 @@ using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
-    public interface IGraph
+    public interface IGraph : INode
     {
+        INode GetNode(string id);
         IEnumerable<T> GetNodes<T>() where T : INode;
         IEnumerable<INode> Nodes { get; }
         T Add<T>(T node) where T : INode;
         bool Get(string id, out INode node);
         void Remove<T>(T node) where T : INode;
 
-        ConnectionsGraph ValueConnections { get; }
-        ConnectionsGraph FlowConnections { get; }
-        
         void Connect(Port output, Port input);
         void Disconnect(Port output, Port input);
-        
+
+        ValuePort GetValuePort(PortId id);
+        FlowPort GetFlowPort(PortId id);
     }
 
     [Graph]
@@ -34,25 +34,28 @@ namespace RedOwl.UIX.Engine
         private List<INode> _nodes;
 
         public IEnumerable<INode> Nodes => _nodes;
-        
-        // TODO: is this right - or should we always just support multiple? Might need to remove configuring capacity of ports then
-        // Input Port -> Output Port
-        [SerializeField] 
-        private ConnectionsGraph _valueConnections;
-
-        public ConnectionsGraph ValueConnections => _valueConnections;
-        
-        // Output Port -> [Input Port, Input Port]
-        [SerializeField] 
-        private ConnectionsGraph _flowConnections;
-
-        public ConnectionsGraph FlowConnections => _flowConnections;
 
         public Graph()
         {
             _nodes = new List<INode>();
-            _valueConnections = new ConnectionsGraph();
-            _flowConnections = new ConnectionsGraph();
+        }
+
+        protected override void OnInitialize()
+        {
+            foreach (var node in _nodes)
+            {
+                node.Initialize();
+            }
+        }
+
+        public INode GetNode(string id)
+        {
+            foreach (var node in _nodes)
+            {
+                if (node.NodeId == id) return node;
+            }
+
+            return null;
         }
         
         public IEnumerable<T> GetNodes<T>() where T : INode
@@ -76,6 +79,7 @@ namespace RedOwl.UIX.Engine
         public T Add<T>(T node) where T : INode
         {
             _nodes.Add(node);
+            if (IsInitialized) node.Initialize();
             return node;
         }
 
@@ -83,7 +87,7 @@ namespace RedOwl.UIX.Engine
         {
              foreach (var n in _nodes)
              {
-                 if (n.Id != id) continue;
+                 if (n.NodeId != id) continue;
                  node = n;    
                  return true;
              }
@@ -98,59 +102,71 @@ namespace RedOwl.UIX.Engine
             for (int i = _nodes.Count - 1; i >= 0; i--)
             {
                 var n = _nodes[i];
-                if (n.Id == node.Id) _nodes.RemoveAt(i);
+                if (n.NodeId == node.NodeId)
+                {
+                    CleanupFlowPortConnections(n);
+                    CleanupValuePortConnections(n);
+                    _nodes.RemoveAt(i);
+                }
             }
         }
-        
-        // TODO: Ports should serialize their direction so we can validate you can connect 
 
+        private void CleanupFlowPortConnections(INode target)
+        {
+            foreach (var node in _nodes)
+            {
+                if (node.NodeId == target.NodeId) continue;
+                foreach (var output in node.ValuePorts.Values)
+                {
+                    foreach (var input in output.Connections)
+                    {
+                        if (target.ValuePorts.TryGetValue(output.PortId, out var _))
+                        {
+                            output.Disconnect(input);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void CleanupValuePortConnections(INode target)
+        {
+            foreach (var node in _nodes)
+            {
+                if (node.NodeId == target.NodeId) continue;
+                foreach (var input in node.ValuePorts.Values)
+                {
+                    foreach (var output in input.Connections)
+                    {
+                        if (target.ValuePorts.TryGetValue(output.Port, out var _))
+                        {
+                            input.Disconnect(output);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Value Ports - Input -> [Output, Output]
+        // Flow Port -  Output -> [Input, Input]
         public void Connect(Port output, Port input)
         {
-            switch (output)
-            {
-                case ValuePort valueOutput when input is ValuePort valueInput:
-                    Connect(valueOutput, valueInput);
-                    break;
-                case FlowPort flowOutput when input is FlowPort flowInput:
-                    Connect(flowOutput, flowInput);
-                    break;
-            }
+            if (input is ValuePort valueIn && output is ValuePort valueOut)
+                valueIn.Connect(valueOut);
+            if (input is FlowPort flowIn && output is FlowPort flowOut) 
+                flowOut.Connect(flowIn);
         }
-        
+
         public void Disconnect(Port output, Port input)
         {
-            // TODO: there is a bug with disconnecting ports after a Deserialize of the _valueConnections & _flowConnections
-            // I think its because we are using "Port" as the key
-            switch (output)
-            {
-                case ValuePort valueOutput when input is ValuePort valueInput:
-                    Disconnect(valueOutput, valueInput);
-                    break;
-                case FlowPort flowOutput when input is FlowPort flowInput:
-                    Disconnect(flowOutput, flowInput);
-                    break;
-            }
+            if (input is ValuePort valueIn && output is ValuePort valueOut)
+                valueIn.Disconnect(valueOut);
+            if (input is FlowPort flowIn && output is FlowPort flowOut)
+                flowOut.Disconnect(flowIn);
         }
 
-        private void Connect(ValuePort output, ValuePort input)
-        {
-            // TODO: check if output.PortType isCastable to input.PortType
-            _valueConnections.Connect(input, output);
-        }
-        
-        private void Disconnect(ValuePort output, ValuePort input)
-        {
-            _valueConnections.Disconnect(input, output);
-        }
+        public ValuePort GetValuePort(PortId id) => GetNode(id.Node).ValuePorts[id.Port];
 
-        private void Connect(FlowPort output, FlowPort input)
-        {
-            _flowConnections.Connect(output, input);
-        }
-        
-        private void Disconnect(FlowPort output, FlowPort input)
-        {
-            _flowConnections.Disconnect(output, input);
-        }
+        public FlowPort GetFlowPort(PortId id) => GetNode(id.Node).FlowPorts[id.Port];
     }
 }

@@ -34,6 +34,7 @@ namespace RedOwl.UIX.Editor
             // This is to prepare for Undo's
             _serializedGraph = new SerializedObject(asset);
             _graph = asset.graph;
+            _graph.Initialize();
 
             UIXEditor.Setup(this);
             
@@ -48,8 +49,8 @@ namespace RedOwl.UIX.Editor
             CreateMiniMap();
             CreateSearch();
 
-            LoadNodes();
-            LoadConnections();
+            CreateNodeViews();
+            CreateConnections();
         }
         
         private void CreateGridBackground()
@@ -71,7 +72,7 @@ namespace RedOwl.UIX.Editor
             nodeCreationRequest = ctx => SearchWindow.Open(new SearchWindowContext(ctx.screenMousePosition), _search);
         }
 
-        public void LoadNodes()
+        public void CreateNodeViews()
         {
             foreach (var node in _graph.Nodes)
             {
@@ -79,34 +80,24 @@ namespace RedOwl.UIX.Editor
             }
         }
 
-        public void LoadConnections()
+        public void CreateConnections()
         {
-            LoadValueConnections();
-            LoadFlowConnections();
-        }
-
-        private void LoadValueConnections()
-        {
-            foreach (var values in _graph.ValueConnections)
+            foreach (var node in _graph.Nodes)
             {
-                var input = values.Key;
-                foreach (var output in values.Value)
+                foreach (var valueIn in node.ValuePorts.Values)
                 {
-                    //Debug.Log($"Creating connection {connection.Output} -> {connection.Input}");
-                    CreateConnection(output, input);
+                    foreach (var valueOut in valueIn.Connections)
+                    {
+                        CreateConnection(valueOut, valueIn);
+                    }
                 }
-            }
-        }
 
-        private void LoadFlowConnections()
-        {
-            foreach (var flows in _graph.FlowConnections)
-            {
-                var output = flows.Key;
-                foreach (var input in flows.Value)
+                foreach (var flowOut in node.FlowPorts.Values)
                 {
-                    //Debug.Log($"Creating connection {connection.Output} -> {connection.Input}");
-                    CreateConnection(output, input);
+                    foreach (var flowIn in flowOut.Connections)
+                    {
+                        CreateConnection(flowOut, flowIn);
+                    }
                 }
             }
         }
@@ -127,6 +118,7 @@ namespace RedOwl.UIX.Editor
         {
             Undo.RecordObject(_graphAsset, "Graph Edit");
             bool changeMade = false;
+            bool graphRedraw = false;
             if (change.elementsToRemove != null)
             {
                 foreach (var element in change.elementsToRemove)
@@ -135,6 +127,7 @@ namespace RedOwl.UIX.Editor
                     {
                         case NodeView view:
                             changeMade = true;
+                            graphRedraw = true; // Hack that cleans up the flow port connections
                             _graph.Remove(view.INode());
                             break;
                         case Edge edge:
@@ -142,7 +135,6 @@ namespace RedOwl.UIX.Editor
                             _graph.Disconnect((Port)edge.output.userData, (Port)edge.input.userData);
                             break;
                     }
-
                     //Debug.Log($"Removed GraphElement: {element.name} {element.title}");
                 }
             }
@@ -154,7 +146,7 @@ namespace RedOwl.UIX.Editor
                     if (element is NodeView view)
                     {
                         changeMade = true;
-                        view.INode().GraphRect = view.GetPosition();
+                        view.INode().NodeRect = view.GetPosition();
                     }
                 }
             }
@@ -171,6 +163,12 @@ namespace RedOwl.UIX.Editor
             if (changeMade)
             {
                 SaveAsset();
+            }
+
+            if (graphRedraw)
+            {
+                // TODO: this is a hack that cleans up the flow port connections - we may want to try and query for them and just delete them instead
+                UIXEditor.Show<UIXGraphWindow>().Load(_graphAsset);
             }
             return change;
         }
@@ -195,12 +193,12 @@ namespace RedOwl.UIX.Editor
             Undo.RecordObject(_graphAsset, "Create Node");
             var node = (INode)Activator.CreateInstance(data.Type);
             var window = EditorWindow.GetWindow<UIXGraphWindow>();
-            node.GraphPosition = window.rootVisualElement.ChangeCoordinatesTo(contentViewContainer, position - window.position.position - new Vector2(3, 26));
+            node.NodePosition = window.rootVisualElement.ChangeCoordinatesTo(contentViewContainer, position - window.position.position - new Vector2(3, 26));
             _graph.Add(node);
             CreateNodeView(node);
             SaveAsset();
         }
-
+        
         private void CreateNodeView<T>(T node) where T : INode
         {
             if (!UIXGraphReflector.NodeCache.Get(node.GetType(), out var data)) return;

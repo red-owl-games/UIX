@@ -1,97 +1,84 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
     public interface INode
-    { 
-        string Id { get; }
-        string Title { get; }
-        Rect GraphRect { get; set; }
-        Vector2 GraphPosition { get; set; }
-        ValuePort GetValuePort(string id);
-        FlowPort GetFlowPort(string id);
-        
+    {
+        void Initialize();
+        string NodeId { get; }
+        string NodeTitle { get; }
+        Rect NodeRect { get; set; }
+        Vector2 NodePosition { get; set; }
+        Dictionary<string, ValuePort> ValuePorts { get; }
+        Dictionary<string, FlowPort> FlowPorts { get; }
     }
 
     [Serializable]
-    public abstract class Node : INode
+    public abstract class Node : INode 
     {
-        private static Vector2 _intialPosition = new Vector2(0, 0);
+        private static Vector2 _defaultPosition = new Vector2(0, 0);
+
+        protected bool IsInitialized { get; private set; }
         
 #if ODIN_INSPECTOR 
         [HideInInspector]
 #endif
         [SerializeField] 
-        private string id;
+        private string nodeId;
 
-        public string Id => id;
+        public string NodeId => nodeId;
         
 #if ODIN_INSPECTOR 
         [HideInInspector]
 #endif
         [SerializeField] 
-        private string title;
+        private string nodeTitle;
 
-        public string Title => title;
+        public string NodeTitle => nodeTitle;
 
 #if ODIN_INSPECTOR 
         [HideInInspector]
 #endif
         [SerializeField] 
-        private Rect graphRect;
+        private Rect nodeRect;
 
-        public Rect GraphRect
+        public Rect NodeRect
         {
-            get => graphRect;
-            set => graphRect = value;
+            get => nodeRect;
+            set => nodeRect = value;
         }
 
-        public Vector2 GraphPosition
+        public Vector2 NodePosition
         {
-            get => graphRect.position;
-            set => graphRect.position = value;
+            get => nodeRect.position;
+            set => nodeRect.position = value;
         }
 
         private Dictionary<string, ValuePort> _valuePorts;
+        public Dictionary<string, ValuePort> ValuePorts => _valuePorts ?? (_valuePorts = Port.GetValuePorts(this));
+
         private Dictionary<string, FlowPort> _flowPorts;
+        public Dictionary<string, FlowPort> FlowPorts => _flowPorts ?? (_flowPorts = Port.GetFlowPorts(this));
 
         protected Node()
         {
-            id = Guid.NewGuid().ToString();
+            nodeId = Guid.NewGuid().ToString();
 
             bool found = UIXGraphReflector.NodeCache.Get(GetType(), out var data);
-            title = found ? data.Name : "";
-            graphRect = found ? new Rect(_intialPosition, data.Size) : new Rect(_intialPosition, new Vector2(200, 100));
+            nodeTitle = found ? data.Name : "";
+            nodeRect = found ? new Rect(_defaultPosition, data.Size) : new Rect(_defaultPosition, new Vector2(200, 100));
         }
 
-        public ValuePort GetValuePort(string id)
+        public void Initialize()
         {
-            if (_valuePorts == null) CachePorts();
-                return _valuePorts[id];
+            if (IsInitialized) return;
+            OnInitialize();
+            IsInitialized = true;
         }
-
-        public FlowPort GetFlowPort(string id)
-        {
-            if (_flowPorts == null) CachePorts();
-                return _flowPorts[id];
-        }
-
-        private void CachePorts()
-        {
-            bool found = UIXGraphReflector.NodeCache.Get(GetType(), out var data);
-            _valuePorts = new Dictionary<string, ValuePort>(data.ValuePorts.Count);
-            _flowPorts = new Dictionary<string, FlowPort>(data.FlowPorts.Count);
-            if (!found) return;
-            foreach (var valuePort in data.ValuePorts)
-            {
-                _valuePorts.Add(valuePort.PortId(this), (ValuePort)valuePort.Port(this)); 
-            }
-            foreach (var flowPort in data.FlowPorts)
-            {
-                _flowPorts.Add(flowPort.PortId(this), (FlowPort)flowPort.Port(this)); 
-            }
-        }
+        
+        protected virtual void OnInitialize() {}
     }
 }

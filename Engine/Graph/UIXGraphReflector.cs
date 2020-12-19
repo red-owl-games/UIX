@@ -84,6 +84,7 @@ namespace RedOwl.UIX.Engine
 
     public class UIXNodeReflection : ITypeStorage
     {
+        private static BindingFlags _bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
         private static Type _isNodeAttribute = typeof(NodeAttribute);
         private static Vector2 _defaultSize = new Vector2(100, 300);
         
@@ -107,6 +108,7 @@ namespace RedOwl.UIX.Engine
         
         public List<UIXFlowPortReflection> FlowPorts { get; set; }
         
+        private Dictionary<string, MethodInfo> _methods;
         private Dictionary<ContextMenu, MethodInfo> _contextMethods;
         
         public IReadOnlyDictionary<ContextMenu, MethodInfo> ContextMethods => _contextMethods;
@@ -141,7 +143,7 @@ namespace RedOwl.UIX.Engine
             ValuePorts = new List<UIXValuePortReflection>();
             // This OrderBy sorts the fields by subclasses first
             // we may want to put an "order" value or at least have InOut attributes process first so they are drawn first
-            var infos = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy).OrderBy(field => field.MetadataToken);
+            var infos = type.GetFields(_bindingFlags).OrderBy(field => field.MetadataToken);
             foreach (var info in infos)
             {
                 var attrs = info.GetCustomAttributes(true);
@@ -169,23 +171,7 @@ namespace RedOwl.UIX.Engine
         private void ExtractFlowPorts(Type type)
         {
             FlowPorts = new List<UIXFlowPortReflection>();
-            
-            // var methodInfos = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy).OrderBy(field => field.MetadataToken);
-            // foreach (var methodInfo in methodInfos)
-            // {
-            //     var attrs = methodInfo.GetCustomAttributes(true);
-            //     foreach (var attr in attrs)
-            //     {
-            //         switch (attr)
-            //         {
-            //             case FlowInAttribute input:
-            //                 //FlowPorts.Add(new FlowPort(methodInfo, input.Capacity, input.Name));
-            //                 break;
-            //         }
-            //     }
-            // }
-            
-            var fieldInfos = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy).OrderBy(field => field.MetadataToken);
+            var fieldInfos = type.GetFields(_bindingFlags).OrderBy(field => field.MetadataToken);
             foreach (var fieldInfo in fieldInfos)
             {
                 var attrs = fieldInfo.GetCustomAttributes(true);
@@ -194,9 +180,19 @@ namespace RedOwl.UIX.Engine
                     switch (attr)
                     {
                         case FlowInAttribute input:
+                            if (input.Callback != null)
+                            {
+                                var info = type.GetMethod(input.Callback, _bindingFlags);
+                                if (info != null && info.GetParameters().Length == 1) Debug.Log($"Input Has Callback - {info.ReturnType}");
+                            }
                             FlowPorts.Add(new UIXFlowPortReflection(fieldInfo, PortDirection.Input, input.Capacity, input.Name));
                             break;
                         case FlowOutAttribute output:
+                            if (output.Callback != null)
+                            {
+                                var info = type.GetMethod(output.Callback, _bindingFlags);
+                                if (info != null && info.GetParameters().Length == 1) Debug.Log($"Output Has Callback - {info.ReturnType}");
+                            }
                             FlowPorts.Add(new UIXFlowPortReflection(fieldInfo, PortDirection.Output, output.Capacity, output.Name));
                             break;
                     }
@@ -215,6 +211,12 @@ namespace RedOwl.UIX.Engine
                     _contextMethods.Add(contextAttr, method);
                 }
             }
+        }
+
+        private Type asyncType = typeof(Func<IEnumerator>);
+        public Func<IEnumerator> CreateDelegate<T>(string callback, T node) where T : INode
+        {
+            return (Func<IEnumerator>) _methods[callback].CreateDelegate(asyncType, node);
         }
     }
 

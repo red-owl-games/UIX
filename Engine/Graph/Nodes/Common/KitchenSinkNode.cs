@@ -7,8 +7,8 @@ namespace RedOwl.UIX.Engine
     public class KitchenSinkNode : Node
     {
         // Flow
-        [FlowIn] public FlowPort Enter;
-        [FlowIn] public FlowPort Passthrough;
+        [FlowIn(Callback = nameof(OnEnter))] public FlowPort Enter;
+        [FlowIn(Callback = nameof(OnEnter))] public FlowPort Passthrough;
 
         [FlowOut] public FlowPort Start;
         [FlowOut] public FlowPort Changed;
@@ -74,8 +74,8 @@ namespace RedOwl.UIX.Engine
         
         public KitchenSinkNode()
         {
-            Enter = new FlowPort(this, nameof(OnEnter));
-            Passthrough = new FlowPort(this, nameof(OnPassthrough));
+            Enter = new FlowPort(this);
+            Passthrough = new FlowPort(this);
             
             Start = new FlowPort(this);
             Changed = new FlowPort(this);

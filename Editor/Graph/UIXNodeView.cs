@@ -37,9 +37,16 @@ namespace RedOwl.UIX.Editor
 
         private void Initialize(UIXNodeReflection data)
         {
-            name = Model.Id;
-            title = Model.Title;
-            SetPosition(Model.GraphRect);
+            name = Model.NodeId;
+            title = Model.NodeTitle;
+            SetPosition(Model.NodeRect);
+            // TODO: map capabilities AND if we use Resizeable we'll need to update the data's Rect with the changes.
+            //capabilities -= Capabilities.Collapsible;
+            //capabilities = Capabilities.Movable;
+            //capabilities = Capabilities.Resizable;
+            //this.IsResizable();
+            //style.width = Model.NodeRect.width;
+            //style.height = Model.NodeRect.height;
 
             CreateBody();
             CreateFlowPorts(data);
@@ -98,7 +105,7 @@ namespace RedOwl.UIX.Editor
     public static class NodeViewExtensions
     {
         public static INode INode(this NodeView self) => (INode) self.userData;
-        public static string Id(this NodeView self) => self.INode().Id;
+        public static string Id(this NodeView self) => self.INode().NodeId;
         public static uint Id(this PortView self) => (uint)self.userData;
     }
 }

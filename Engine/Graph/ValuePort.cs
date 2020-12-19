@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
@@ -14,12 +16,6 @@ namespace RedOwl.UIX.Engine
         
         public Type PortType => portType;
 
-        // public object Get(IFlow flow)
-        // {
-        //     // TODO: pull from flow - if not present return value
-        //     return null;
-        // }
-        
         public void Set<T>(IFlow flow, T value)
         {
             flow.Set(this, value);
@@ -29,6 +25,11 @@ namespace RedOwl.UIX.Engine
         public void OnBeforeSerialize() => Serialize();
         protected virtual void Deserialize() {}
         public void OnAfterDeserialize() => Deserialize();
+        
+        public override IEnumerator Execute()
+        {
+            throw new NotImplementedException();
+        }
     }
     
     [Serializable]

@@ -26,7 +26,7 @@ namespace RedOwl.UIX.Engine
         
         public bool Moveable { get; set; } = true;
         
-        public Vector2 Size { get; set; } = new Vector2(100, 200);
+        public Vector2 Size { get; set; } = new Vector2(200, 100);
         
         public NodeAttribute(params string[] tags)
         {

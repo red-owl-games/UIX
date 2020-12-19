@@ -51,7 +51,7 @@ namespace RedOwl.UIX.Editor
             Load(AssetDatabase.LoadAssetAtPath<GraphAsset>(AssetDatabase.GetAssetPath(_lastAsset)));
         }
 
-        private void Load(GraphAsset asset)
+        internal void Load(GraphAsset asset)
         {
             if (asset == null) return;
             if (_lastAsset != null)

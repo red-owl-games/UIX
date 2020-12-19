@@ -1,23 +1,17 @@
 using System;
-using System.Collections.Generic;
-using UnityEngine;
+using System.Collections;
 
 namespace RedOwl.UIX.Engine
 {
     [Serializable]
     public class FlowPort : Port
     {
-        [SerializeField]
-        private string callbackName;
-
-        public FlowPort(INode node) : base(node)
-        {
-            callbackName = null;
-        }
+        private Func<IEnumerator> _callback;
         
-        public FlowPort(INode node, string callback) : base(node)
-        {
-            callbackName = callback;
-        }
+        public FlowPort(INode node) : base(node) {}
+        
+        public override IEnumerator Execute() => _callback();
+
+        public void SetCallback(Func<IEnumerator> callback) => _callback = callback;
     }
 }

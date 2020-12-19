@@ -7,7 +7,7 @@ namespace RedOwl.UIX.Engine
     {
         [ValueIn] public ValuePort Condition;
 
-        [FlowIn] public FlowPort Enter;
+        [FlowIn(Callback = nameof(OnEnter))] public FlowPort Enter;
 
         [FlowOut] public FlowPort True;
         [FlowOut] public FlowPort False;
@@ -15,7 +15,7 @@ namespace RedOwl.UIX.Engine
         public BranchNode()
         {
             Condition = new ValuePort<bool>(this, false);
-            Enter = new FlowPort(this, nameof(OnEnter));
+            Enter = new FlowPort(this);
             
             True = new FlowPort(this);
             False = new FlowPort(this);

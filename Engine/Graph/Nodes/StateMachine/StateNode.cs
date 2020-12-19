@@ -2,19 +2,19 @@ namespace RedOwl.UIX.Engine
 {
     public abstract class StateNode : Node
     {
-        [FlowIn] public FlowPort Enter;
-        [FlowIn] public FlowPort Update;
-        [FlowOut] public FlowPort Exit;
+        [FlowIn(Callback=nameof(OnEnter))] public FlowPort Enter;
+        [FlowIn(Callback=nameof(OnUpdate))] public FlowPort Update;
+        [FlowOut(Callback=nameof(OnExit))] public FlowPort Exit;
 
         protected StateNode()
         {
-            Enter = new FlowPort(this, nameof(OnEnter));
-            Update = new FlowPort(this, nameof(OnUpdate));
-            Exit = new FlowPort(this, nameof(OnExit));
+            Enter = new FlowPort(this);
+            Update = new FlowPort(this);
+            Exit = new FlowPort(this);
         }
 
-        protected abstract void OnEnter();
-        protected abstract void OnUpdate();
-        protected abstract void OnExit();
+        protected abstract void OnEnter(IFlow flow);
+        protected abstract void OnUpdate(IFlow flow);
+        protected abstract void OnExit(IFlow flow);
     }
 }

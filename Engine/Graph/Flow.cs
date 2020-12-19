@@ -22,6 +22,7 @@ namespace RedOwl.UIX.Engine
         {
             _cache = new BetterDictionary<PortId, object>();
             _graph = graph;
+            _graph.Initialize();
             _startNodes = new List<INode>(startNodes);
         }
 
@@ -60,15 +61,41 @@ namespace RedOwl.UIX.Engine
             }
         }
 
-        // public void Execute()
-        // {
-        //     _cache.Clear();
-        //     foreach (var node in _startNodes)
-        //     {
-        //         var enumerator = Run(node);
-        //         while(enumerator.MoveNext()) {}
-        //     }
-        // }
+        public void Execute()
+        {
+            _cache.Clear();
+            foreach (var node in _startNodes)
+            {
+                foreach (var output in node.FlowPorts.Values)
+                {
+                    // Check if Is Output otherwise skip?
+                    var enumerator = WalkOutput(output);
+                    while (enumerator.MoveNext()) {}
+                }
+            }
+        }
+
+        private IEnumerator WalkOutput(Port output)
+        {
+            while (output.Execute().MoveNext()) {}
+            foreach (var input in output.Connections)
+            {
+                yield return WalkInput(_graph.GetFlowPort(input));
+            }
+        }
+
+        private IEnumerator WalkInput(Port port)
+        {
+            var enumerator = port.Execute();
+            while (enumerator.MoveNext())
+            {
+                if (enumerator.Current is FlowPort output)
+                {
+                    yield return WalkOutput(output);
+                }
+            }
+        }
+
         //
         // public IEnumerator ExecuteAsync()
         // {
