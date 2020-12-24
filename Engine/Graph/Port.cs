@@ -1,17 +1,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
-    // TODO: should Ports serialize their direction so we can validate you can connect 
+    // TODO: should Ports serialize their direction so we can validate you can connect
+    
+    public interface IPortReflectionData {}
     
     public enum PortDirection
     {
         Input,
         Output,
+        InOut,
     }
 
     public enum PortCapacity
@@ -69,8 +71,14 @@ namespace RedOwl.UIX.Engine
 
         public PortId Id => id;
         
-        public string NodeId => id.Node;
+        // public string NodeId => id.Node;
         public string PortId => id.Port;
+        
+        public string Name { get; protected set; }
+
+        public PortDirection Direction { get; protected set; }
+         
+        public PortCapacity Capacity { get; protected set; }
         
         [SerializeField]
         private List<PortId> connections;
@@ -86,40 +94,17 @@ namespace RedOwl.UIX.Engine
         public void Connect(PortId output) => connections.Add(output);
         public void Disconnect(PortId output) => connections.Remove(output);
 
-        public override string ToString()
-        {
-            return $"{id.Node}.{id.Port}";
-        }
+        public override string ToString() => $"[{Name} | {Direction} | {Capacity}]";
 
         public static implicit operator PortId(Port port) => port.id;
 
-        public static Dictionary<string, FlowPort> GetFlowPorts<T>(T node) where T : INode
-        {
-            if (!UIXGraphReflector.NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, FlowPort>();
-            var output = new Dictionary<string, FlowPort>(data.FlowPorts.Count);
-            foreach (var port in data.FlowPorts)
-            {
-                var flowPort = (FlowPort) port.Port(node);
-                
-                //flowPort.SetCallback(data.CreateDelegate(flowPort.CallbackName, node));
-                output.Add(port.PortId(node), flowPort); 
-            }
-
-            return output;
-        }
-
-        public static Dictionary<string, ValuePort> GetValuePorts<T>(T node) where T : INode
-        {
-            if (!UIXGraphReflector.NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, ValuePort>();
-            var output = new Dictionary<string, ValuePort>(data.ValuePorts.Count);
-            foreach (var port in data.ValuePorts)
-            {
-                output.Add(port.PortId(node), (ValuePort) port.Port(node)); 
-            }
-
-            return output;
-        }
-
         public abstract IEnumerator Execute();
+    }
+
+    public abstract class Port<T> : Port where T : IPortReflectionData
+    {
+        protected Port(INode node) : base(node) {}
+
+        public abstract void Initialize<TNode>(TNode node, UIXNodeReflection nodeData , T portData) where TNode : INode;
     }
 }

@@ -16,56 +16,56 @@ namespace RedOwl.UIX.Engine
         
         // Primatives
         
-        [ValueInOut] public ValuePort String;
-        [ValueInOut] public ValuePort Char;
-        [ValueInOut] public ValuePort Bool;
-        [ValueInOut] public ValuePort Float;
-        [ValueInOut] public ValuePort Double;
-        // [ValueInOut] public ValuePort Decimal; // Does Not Serialize
-        [ValueInOut] public ValuePort Short;
-        [ValueInOut] public ValuePort Int;
-        [ValueInOut] public ValuePort Long;
-        [ValueInOut] public ValuePort UShort;
-        [ValueInOut] public ValuePort UInt;
-        [ValueInOut] public ValuePort ULong;
-        [ValueInOut] public ValuePort SByte;
-        [ValueInOut] public ValuePort Byte;
+        [ValueIn, ValueOut] public ValuePort String;
+        [ValueIn, ValueOut] public ValuePort Char;
+        [ValueIn, ValueOut] public ValuePort Bool;
+        [ValueIn, ValueOut] public ValuePort Float;
+        [ValueIn, ValueOut] public ValuePort Double;
+        // [ValueIn, ValueOut] public ValuePort Decimal; // Does Not Serialize
+        [ValueIn, ValueOut] public ValuePort Short;
+        [ValueIn, ValueOut] public ValuePort Int;
+        [ValueIn, ValueOut] public ValuePort Long;
+        [ValueIn, ValueOut] public ValuePort UShort;
+        [ValueIn, ValueOut] public ValuePort UInt;
+        [ValueIn, ValueOut] public ValuePort ULong;
+        [ValueIn, ValueOut] public ValuePort SByte;
+        [ValueIn, ValueOut] public ValuePort Byte;
         
         // Array
-        // [ValueInOut] public ValuePort StringArray; // Caused a Crash on Recompile
-        // [ValueInOut] public ValuePort FloatArray; // Caused a Crash on Recompile
+        // [ValueIn, ValueOut] public ValuePort StringArray; // Caused a Crash on Recompile
+        // [ValueIn, ValueOut] public ValuePort FloatArray; // Caused a Crash on Recompile
         //
         // // List
-        // [ValueInOut] public ValuePort StringList; // Caused a Crash on Recompile
-        // [ValueInOut] public ValuePort FloatList; // Caused a Crash on Recompile
+        // [ValueIn, ValueOut] public ValuePort StringList; // Caused a Crash on Recompile
+        // [ValueIn, ValueOut] public ValuePort FloatList; // Caused a Crash on Recompile
         
         // Complex Types
-        // [ValueInOut] public ValuePort Uri; // Does Not Serialize
-        // [ValueInOut] public ValuePort Guid; // Does Not Serialize
-        // [ValueInOut] public ValuePort DateTime; // Does Not Serialize
-        // [ValueInOut] public ValuePort DateTimeOffset; // Does Not Serialize
-        // [ValueInOut] public ValuePort TimeSpan; // Does Not Serialize
+        // [ValueIn, ValueOut] public ValuePort Uri; // Does Not Serialize
+        // [ValueIn, ValueOut] public ValuePort Guid; // Does Not Serialize
+        // [ValueIn, ValueOut] public ValuePort DateTime; // Does Not Serialize
+        // [ValueIn, ValueOut] public ValuePort DateTimeOffset; // Does Not Serialize
+        // [ValueIn, ValueOut] public ValuePort TimeSpan; // Does Not Serialize
         
         // Unity Types
-        [ValueInOut] public ValuePort Color;
-        [ValueInOut] public ValuePort Color32;
-        [ValueInOut] public ValuePort Vector2;
-        [ValueInOut] public ValuePort Vector3;
-        [ValueInOut] public ValuePort Vector4;
-        [ValueInOut] public ValuePort Vector2Int;
-        [ValueInOut] public ValuePort Vector3Int;
-        [ValueInOut] public ValuePort Quaternion;
-        [ValueInOut] public ValuePort Bounds;
-        [ValueInOut] public ValuePort BoundsInt;
-        [ValueInOut] public ValuePort Rect;
-        [ValueInOut] public ValuePort RectInt;
-        // [ValueInOut] public ValuePort AnimationCurve; // Caused a Crash on Recompile
-        // [ValueInOut] public ValuePort Gradient; // Caused a Crash on Recompile
-        // [ValueInOut] public ValuePort LayerMask; // Caused a Crash on Recompile
-        // [ValueInOut] public ValuePort Texture; // Does Not Serialize
-        // [ValueInOut] public ValuePort Texture2D; // Does Not Serialize
-        // [ValueInOut] public ValuePort Texture3D; // Does Not Serialize
-        // [ValueInOut] public ValuePort RenderTexture; // Does Not Serialize
+        [ValueIn, ValueOut] public ValuePort Color;
+        [ValueIn, ValueOut] public ValuePort Color32;
+        [ValueIn, ValueOut] public ValuePort Vector2;
+        [ValueIn, ValueOut] public ValuePort Vector3;
+        [ValueIn, ValueOut] public ValuePort Vector4;
+        [ValueIn, ValueOut] public ValuePort Vector2Int;
+        [ValueIn, ValueOut] public ValuePort Vector3Int;
+        [ValueIn, ValueOut] public ValuePort Quaternion;
+        [ValueIn, ValueOut] public ValuePort Bounds;
+        [ValueIn, ValueOut] public ValuePort BoundsInt;
+        [ValueIn, ValueOut] public ValuePort Rect;
+        [ValueIn, ValueOut] public ValuePort RectInt;
+        // [ValueIn, ValueOut] public ValuePort AnimationCurve; // Caused a Crash on Recompile
+        // [ValueIn, ValueOut] public ValuePort Gradient; // Caused a Crash on Recompile
+        // [ValueIn, ValueOut] public ValuePort LayerMask; // Caused a Crash on Recompile
+        // [ValueIn, ValueOut] public ValuePort Texture; // Does Not Serialize
+        // [ValueIn, ValueOut] public ValuePort Texture2D; // Does Not Serialize
+        // [ValueIn, ValueOut] public ValuePort Texture3D; // Does Not Serialize
+        // [ValueIn, ValueOut] public ValuePort RenderTexture; // Does Not Serialize
         
         // Unity Mathamatics
         

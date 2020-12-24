@@ -1,12 +1,11 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
     [Serializable]
-    public class ValuePort : Port, ISerializationCallbackReceiver
+    public class ValuePort : Port<UIXValuePortReflection>, ISerializationCallbackReceiver
     {
         [SerializeField] protected string serializationData;
         
@@ -25,7 +24,16 @@ namespace RedOwl.UIX.Engine
         public void OnBeforeSerialize() => Serialize();
         protected virtual void Deserialize() {}
         public void OnAfterDeserialize() => Deserialize();
-        
+
+        public override void Initialize<TNode>(TNode node, UIXNodeReflection nodeData , UIXValuePortReflection portData)
+        {
+            Name = portData.Name;
+            Direction = portData.Direction;
+            Capacity = portData.Capacity;
+            
+            //Debug.Log($"Initializing Value Port '{this}' for node '{node}'");
+        }
+
         public override IEnumerator Execute()
         {
             throw new NotImplementedException();

@@ -7,10 +7,8 @@ using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
-    public class UIXValuePortReflection
+    public class UIXValuePortReflection : IPortReflectionData
     {
-        private static readonly Type ObjectType = typeof(object);
-        
         public FieldInfo Info { get; }
 
         public string Name { get; }
@@ -36,19 +34,9 @@ namespace RedOwl.UIX.Engine
         {
             return Info.GetValue(node) is Port port ? port.PortId : "";
         }
-        
-        public Port Port(INode node)
-        {
-            return (Port)Info.GetValue(node);
-        }
-
-        public Type PortType(INode node)
-        {
-            return Info.GetValue(node) is ValuePort valuePort ? valuePort.PortType : ObjectType;
-        }
     }
     
-     public class UIXFlowPortReflection
+     public class UIXFlowPortReflection : IPortReflectionData
      {
          private static readonly Type EnumerableType = typeof(IEnumerable);
          
@@ -74,11 +62,6 @@ namespace RedOwl.UIX.Engine
          public string PortId(INode node)
          {
              return Info.GetValue(node) is Port port ? port.PortId : "";
-         }
-         
-         public Port Port(INode node)
-         {
-             return (Port)Info.GetValue(node);
          }
      }
 
@@ -157,10 +140,6 @@ namespace RedOwl.UIX.Engine
                         case ValueOutAttribute output:
                             ValuePorts.Add(new UIXValuePortReflection(info, PortDirection.Output, output.Capacity, output.Name));
                             break;
-                        case ValueInOutAttribute inout:
-                            ValuePorts.Add(new UIXValuePortReflection(info, PortDirection.Input, inout.InCapacity, inout.InName));
-                            ValuePorts.Add(new UIXValuePortReflection(info, PortDirection.Output, inout.OutCapacity, inout.OutName));
-                            break;
                     }
                 }
             }
@@ -180,19 +159,19 @@ namespace RedOwl.UIX.Engine
                     switch (attr)
                     {
                         case FlowInAttribute input:
-                            if (input.Callback != null)
-                            {
-                                var info = type.GetMethod(input.Callback, _bindingFlags);
-                                if (info != null && info.GetParameters().Length == 1) Debug.Log($"Input Has Callback - {info.ReturnType}");
-                            }
+                            // if (input.Callback != null)
+                            // {
+                            //     var info = type.GetMethod(input.Callback, _bindingFlags);
+                            //     //if (info != null && info.GetParameters().Length == 1) Debug.Log($"Input Has Callback - {info.ReturnType}");
+                            // }
                             FlowPorts.Add(new UIXFlowPortReflection(fieldInfo, PortDirection.Input, input.Capacity, input.Name));
                             break;
                         case FlowOutAttribute output:
-                            if (output.Callback != null)
-                            {
-                                var info = type.GetMethod(output.Callback, _bindingFlags);
-                                if (info != null && info.GetParameters().Length == 1) Debug.Log($"Output Has Callback - {info.ReturnType}");
-                            }
+                            // if (output.Callback != null)
+                            // {
+                            //     var info = type.GetMethod(output.Callback, _bindingFlags);
+                            //     //if (info != null && info.GetParameters().Length == 1) Debug.Log($"Output Has Callback - {info.ReturnType}");
+                            // }
                             FlowPorts.Add(new UIXFlowPortReflection(fieldInfo, PortDirection.Output, output.Capacity, output.Name));
                             break;
                     }
@@ -211,12 +190,6 @@ namespace RedOwl.UIX.Engine
                     _contextMethods.Add(contextAttr, method);
                 }
             }
-        }
-
-        private Type asyncType = typeof(Func<IEnumerator>);
-        public Func<IEnumerator> CreateDelegate<T>(string callback, T node) where T : INode
-        {
-            return (Func<IEnumerator>) _methods[callback].CreateDelegate(asyncType, node);
         }
     }
 
@@ -245,5 +218,35 @@ namespace RedOwl.UIX.Engine
         public static readonly TypeCache<INode, UIXNodeReflection> NodeCache = new TypeCache<INode, UIXNodeReflection>();
         
         public static readonly TypeCache<IGraph, UIXGraphReflection> GraphCache = new TypeCache<IGraph, UIXGraphReflection>();
+        
+        public static Dictionary<string, FlowPort> GetFlowPorts<T>(T node) where T : INode
+        {
+            if (!NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, FlowPort>();
+            var output = new Dictionary<string, FlowPort>(data.FlowPorts.Count);
+            foreach (var port in data.FlowPorts)
+            {
+                // TODO: These need to be "Proxy" objects composed of the data rather then the real ones.
+                var flowPort = (FlowPort) port.Info.GetValue(node);
+                flowPort.Initialize(node, data, port);
+                output.Add(port.PortId(node), flowPort); 
+            }
+
+            return output;
+        }
+
+        public static Dictionary<string, ValuePort> GetValuePorts<T>(T node) where T : INode
+        {
+            if (!NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, ValuePort>();
+            var output = new Dictionary<string, ValuePort>(data.ValuePorts.Count);
+            foreach (var port in data.ValuePorts)
+            {
+                // TODO: These need to be "Proxy" objects composed of the data rather then the real ones.
+                var valuePort = (ValuePort) port.Info.GetValue(node);
+                valuePort.Initialize(node, data, port);
+                output.Add(port.PortId(node), valuePort); 
+            }
+
+            return output;
+        }
     }
 }

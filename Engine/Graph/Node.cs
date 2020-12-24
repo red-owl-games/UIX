@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
@@ -21,8 +22,9 @@ namespace RedOwl.UIX.Engine
     {
         private static Vector2 _defaultPosition = new Vector2(0, 0);
 
+        [field: NonSerialized] // Prevents a weird editor domain reload bug where IsInitialized stays true
         protected bool IsInitialized { get; private set; }
-        
+
 #if ODIN_INSPECTOR 
         [HideInInspector]
 #endif
@@ -58,10 +60,10 @@ namespace RedOwl.UIX.Engine
         }
 
         private Dictionary<string, ValuePort> _valuePorts;
-        public Dictionary<string, ValuePort> ValuePorts => _valuePorts ?? (_valuePorts = Port.GetValuePorts(this));
+        public Dictionary<string, ValuePort> ValuePorts => _valuePorts ?? (_valuePorts = UIXGraphReflector.GetValuePorts(this));
 
         private Dictionary<string, FlowPort> _flowPorts;
-        public Dictionary<string, FlowPort> FlowPorts => _flowPorts ?? (_flowPorts = Port.GetFlowPorts(this));
+        public Dictionary<string, FlowPort> FlowPorts => _flowPorts ?? (_flowPorts = UIXGraphReflector.GetFlowPorts(this));
 
         protected Node()
         {
@@ -75,10 +77,23 @@ namespace RedOwl.UIX.Engine
         public void Initialize()
         {
             if (IsInitialized) return;
-            OnInitialize();
-            IsInitialized = true;
+            try
+            {
+                // Hack to trigger initialization of ports
+                _valuePorts = ValuePorts;
+                _flowPorts = FlowPorts;
+                OnInitialize();
+                IsInitialized = true;
+            }
+            catch
+            {
+                IsInitialized = false;
+                Debug.LogWarning($"Failed to Initialize Node {GetType().FullName} | {nodeId}");
+            }
         }
         
         protected virtual void OnInitialize() {}
+        
+        public override string ToString() => $"{nodeTitle}";
     }
 }

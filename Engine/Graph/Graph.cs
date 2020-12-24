@@ -15,6 +15,7 @@ namespace RedOwl.UIX.Engine
         INode GetNode(string id);
         IEnumerable<T> GetNodes<T>() where T : INode;
         IEnumerable<INode> Nodes { get; }
+        int NodeCount { get; }
         T Add<T>(T node) where T : INode;
         bool Get(string id, out INode node);
         void Remove<T>(T node) where T : INode;
@@ -34,6 +35,8 @@ namespace RedOwl.UIX.Engine
         private List<INode> _nodes;
 
         public IEnumerable<INode> Nodes => _nodes;
+
+        public int NodeCount => _nodes.Count;
 
         public Graph()
         {
@@ -116,11 +119,11 @@ namespace RedOwl.UIX.Engine
             foreach (var node in _nodes)
             {
                 if (node.NodeId == target.NodeId) continue;
-                foreach (var output in node.ValuePorts.Values)
+                foreach (var output in node.FlowPorts.Values)
                 {
                     foreach (var input in output.Connections)
                     {
-                        if (target.ValuePorts.TryGetValue(output.PortId, out var _))
+                        if (target.FlowPorts.TryGetValue(output.PortId, out var _))
                         {
                             output.Disconnect(input);
                         }

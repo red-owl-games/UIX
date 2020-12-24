@@ -54,17 +54,20 @@ namespace RedOwl.UIX.Editor
         internal void Load(GraphAsset asset)
         {
             if (asset == null) return;
-            if (_lastAsset != null)
-            {
-                EditorUtility.SetDirty(_lastAsset);
-                AssetDatabase.SaveAssets();
-            }
+            EnsureLastGraphSaved();
             _lastAsset = asset;
             EditorUtility.SetDirty(_lastAsset);
             if (_lastAsset.graph == null) _lastAsset.graph = new Graph();
             Cleanup();
             CreateView();
             CreateToolbar();
+        }
+
+        private void EnsureLastGraphSaved()
+        {
+            if (_lastAsset == null) return;
+            EditorUtility.SetDirty(_lastAsset);
+            AssetDatabase.SaveAssets();
         }
 
         private void Cleanup()
