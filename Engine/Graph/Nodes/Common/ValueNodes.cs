@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace RedOwl.UIX.Engine
 {
     [Node("Common", Path = "Common/Value")]
@@ -10,6 +12,8 @@ namespace RedOwl.UIX.Engine
             Value = new ValuePort<TValue>(this, defaultValue);
         }
     }
+    
+    // Primatives
     
     public class StringValueNode : ValueNode<string>
     {
@@ -87,5 +91,79 @@ namespace RedOwl.UIX.Engine
     {
         public ByteValueNode() : this(default) {}
         public ByteValueNode(byte defaultValue) : base(defaultValue) { }
+    }
+    
+    // Unity Types
+    
+    public class ColorValueNode : ValueNode<Color>
+    {
+        public ColorValueNode() : this(default) {}
+        public ColorValueNode(Color defaultValue) : base(defaultValue) { }
+    }
+    
+    public class Color32ValueNode : ValueNode<Color32>
+    {
+        public Color32ValueNode() : this(default) {}
+        public Color32ValueNode(Color32 defaultValue) : base(defaultValue) { }
+    }
+    
+    public class Vector2ValueNode : ValueNode<Vector2>
+    {
+        public Vector2ValueNode() : this(default) {}
+        public Vector2ValueNode(Vector2 defaultValue) : base(defaultValue) { }
+    }
+    
+    public class Vector3ValueNode : ValueNode<Vector3>
+    {
+        public Vector3ValueNode() : this(default) {}
+        public Vector3ValueNode(Vector3 defaultValue) : base(defaultValue) { }
+    }
+    
+    public class Vector4ValueNode : ValueNode<Vector4>
+    {
+        public Vector4ValueNode() : this(default) {}
+        public Vector4ValueNode(Vector4 defaultValue) : base(defaultValue) { }
+    }
+    
+    public class Vector2IntValueNode : ValueNode<Vector2Int>
+    {
+        public Vector2IntValueNode() : this(default) {}
+        public Vector2IntValueNode(Vector2Int defaultValue) : base(defaultValue) { }
+    }
+    
+    public class Vector3IntValueNode : ValueNode<Vector3Int>
+    {
+        public Vector3IntValueNode() : this(default) {}
+        public Vector3IntValueNode(Vector3Int defaultValue) : base(defaultValue) { }
+    }
+    
+    public class QuaternionValueNode : ValueNode<Quaternion>
+    {
+        public QuaternionValueNode() : this(default) {}
+        public QuaternionValueNode(Quaternion defaultValue) : base(defaultValue) { }
+    }
+    
+    public class BoundsValueNode : ValueNode<Bounds>
+    {
+        public BoundsValueNode() : this(default) {}
+        public BoundsValueNode(Bounds defaultValue) : base(defaultValue) { }
+    }
+    
+    public class BoundsIntValueNode : ValueNode<BoundsInt>
+    {
+        public BoundsIntValueNode() : this(default) {}
+        public BoundsIntValueNode(BoundsInt defaultValue) : base(defaultValue) { }
+    }
+    
+    public class RectValueNode : ValueNode<Rect>
+    {
+        public RectValueNode() : this(default) {}
+        public RectValueNode(Rect defaultValue) : base(defaultValue) { }
+    }
+    
+    public class RectIntValueNode : ValueNode<RectInt>
+    {
+        public RectIntValueNode() : this(default) {}
+        public RectIntValueNode(RectInt defaultValue) : base(defaultValue) { }
     }
 }
