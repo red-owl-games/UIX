@@ -8,18 +8,36 @@ namespace RedOwl.UIX.Engine
     // TODO: should Ports serialize their direction so we can validate you can connect
     
     public interface IPortReflectionData {}
-    
+
     public enum PortDirection
     {
         Input,
         Output,
-        InOut,
     }
 
     public enum PortCapacity
     {
         Single,
         Multi,
+    }
+    
+    public interface IPort
+    {
+        PortId Id { get; }
+        
+        string Name { get; }
+
+        PortDirection Direction { get; }
+         
+        PortCapacity Capacity { get; }
+        
+        Type ValueType { get; }
+        
+        List<PortId> Connections { get; }
+
+        void Connect(PortId output);
+
+        void Disconnect(PortId output);
     }
 
     [Serializable]
@@ -80,6 +98,7 @@ namespace RedOwl.UIX.Engine
          
         public PortCapacity Capacity { get; protected set; }
         
+
         [SerializeField]
         private List<PortId> connections;
 
@@ -90,6 +109,12 @@ namespace RedOwl.UIX.Engine
             id = new PortId(node.NodeId, Guid.NewGuid().ToString());
             connections = new List<PortId>();
         }
+
+        protected Port(IPort port)
+        {
+            id = port.Id;
+            connections = port.Connections;
+        }
         
         public void Connect(PortId output) => connections.Add(output);
         public void Disconnect(PortId output) => connections.Remove(output);
@@ -97,13 +122,13 @@ namespace RedOwl.UIX.Engine
         public override string ToString() => $"[{Name} | {Direction} | {Capacity}]";
 
         public static implicit operator PortId(Port port) => port.id;
-
-        public abstract IEnumerator Execute();
     }
 
     public abstract class Port<T> : Port where T : IPortReflectionData
     {
         protected Port(INode node) : base(node) {}
+        
+        protected Port(IPort port) : base(port) {}
 
         public abstract void Initialize<TNode>(TNode node, UIXNodeReflection nodeData , T portData) where TNode : INode;
     }

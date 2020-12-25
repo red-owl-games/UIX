@@ -65,33 +65,26 @@ namespace RedOwl.UIX.Editor
             UIXEditor.DrawInto(node, extensionContainer);
         }
         
+        private PortView CreatePortView(IPort valuePort, Orientation orientation)
+        {
+            var view = PortView.Create<Edge>(orientation, ConvertDirection(valuePort.Direction), ConvertCapacity(valuePort.Capacity), valuePort.ValueType);
+            view.name = valuePort.Id.Port;
+            view.userData = valuePort;
+            view.portName = valuePort.Name;
+            return view;
+        }
+        
         private void CreateValuePorts(INode node)
         {
-            foreach (var valuePort in node.ValuePorts.Values)
+            foreach (var valuePort in node.ValueInPorts.Values)
             {
-                switch (valuePort.Direction)
-                {
-                    case PortDirection.Input:
-                        CreateValuePort(valuePort, Direction.Input);
-                        break;
-                    case PortDirection.Output:
-                        CreateValuePort(valuePort, Direction.Output);
-                        break;
-                    case PortDirection.InOut:
-                        CreateValuePort(valuePort, Direction.Input);
-                        CreateValuePort(valuePort, Direction.Output);
-                        break;
-                }
+                inputContainer.Add(CreatePortView(valuePort, Orientation.Horizontal));
             }
-        }
-
-        private void CreateValuePort(ValuePort valuePort, Direction direction)
-        {
-            var port = PortView.Create<Edge>(Orientation.Horizontal, direction, ConvertCapacity(valuePort.Capacity), valuePort.PortType);
-            port.name = valuePort.PortId;
-            port.userData = valuePort;
-            port.portName = valuePort.Name;
-            (direction == Direction.Input ? inputContainer : outputContainer).Add(port);
+            
+            foreach (var valuePort in node.ValueOutPorts.Values)
+            {
+                outputContainer.Add(CreatePortView(valuePort, Orientation.Horizontal));
+            }
         }
 
         private void CreateFlowPortContainers()
@@ -104,21 +97,14 @@ namespace RedOwl.UIX.Editor
 
         private void CreateFlowPorts(INode node)
         {
-            foreach (var flowPort in node.FlowPorts.Values)
+            foreach (var flowPort in node.FlowInPorts.Values)
             {
-                switch (flowPort.Direction)
-                {
-                    case PortDirection.Input:
-                        CreateFlowPort(flowPort);
-                        break;
-                    case PortDirection.Output:
-                        CreateFlowPort(flowPort);
-                        break;
-                    case PortDirection.InOut:
-                        // TODO: Implement
-                        Debug.LogWarning("Flow Port InOut is Not Implemented");
-                        break;
-                }
+                FlowInPortContainer.Add(CreatePortView(flowPort, Orientation.Vertical));
+            }
+            
+            foreach (var flowPort in node.FlowOutPorts.Values)
+            {
+                FlowOutPortContainer.Add(CreatePortView(flowPort, Orientation.Vertical));
             }
         }
 
@@ -127,41 +113,31 @@ namespace RedOwl.UIX.Editor
             if (FlowInPortContainer.childCount > 0) mainContainer.parent.Insert(0, FlowInPortContainer);
             if (FlowOutPortContainer.childCount > 0) mainContainer.parent.Add(FlowOutPortContainer);
         }
-        
-        private static readonly Type FlowPortType = typeof(FlowPort);
-        private void CreateFlowPort(FlowPort flowPort)
-        {
-            var port = PortView.Create<Edge>(Orientation.Vertical, ConvertDirection(flowPort.Direction), ConvertCapacity(flowPort.Capacity), FlowPortType);
-            port.name = flowPort.PortId;
-            port.userData = flowPort;
-            port.portName = flowPort.Name;
-            ((flowPort.Direction == PortDirection.Input) ? FlowInPortContainer : FlowOutPortContainer).Add(port);
-        }
 
         private Direction ConvertDirection(PortDirection value) => value == PortDirection.Input ? Direction.Input : Direction.Output;
         private PortView.Capacity ConvertCapacity(PortCapacity value) => value == PortCapacity.Single ? PortView.Capacity.Single : PortView.Capacity.Multi;
 
         public IEnumerable<Edge> CreateConnections(Dictionary<string, UIXNodeView> cache)
         {
-            foreach (var valuePort in Model.ValuePorts.Values)
+            foreach (var valuePort in Model.ValueInPorts.Values)
             {
                 foreach (var connection in valuePort.Connections)
                 {
                     if (!cache.TryGetValue(connection.Node, out var output)) continue;
-                    var inputPort = inputContainer.Q<PortView>(valuePort.PortId);
+                    var inputPort = inputContainer.Q<PortView>(valuePort.Id.Port);
                     var outputPort = output.outputContainer.Q<PortView>(connection.Port);
                     if (inputPort != null && outputPort != null) 
                         yield return outputPort.ConnectTo(inputPort);
                 }
             }
 
-            foreach (var flowPort in Model.FlowPorts.Values)
+            foreach (var flowPort in Model.FlowOutPorts.Values)
             {
                 foreach (var connection in flowPort.Connections)
                 {
-                    if (!cache.TryGetValue(connection.Node, out var output)) continue;
-                    var inputPort = FlowOutPortContainer.Q<PortView>(flowPort.PortId);
-                    var outputPort = output.FlowInPortContainer.Q<PortView>(connection.Port);
+                    if (!cache.TryGetValue(connection.Node, out var inputNode)) continue;
+                    var inputPort = inputNode.FlowInPortContainer.Q<PortView>(connection.Port);
+                    var outputPort = FlowOutPortContainer.Q<PortView>(flowPort.Id.Port);
                     if (inputPort != null && outputPort != null) 
                         yield return outputPort.ConnectTo(inputPort);
                 }

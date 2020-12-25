@@ -124,7 +124,7 @@ namespace RedOwl.UIX.Editor
                             break;
                         case Edge edge:
                             changeMade = true;
-                            _graph.Disconnect((Port)edge.output.userData, (Port)edge.input.userData);
+                            _graph.Disconnect((IPort)edge.output.userData, (IPort)edge.input.userData);
                             break;
                         default:
                             Debug.LogWarning($"Unhandeled GraphElement Removed: {element.GetType().FullName} | {element.name} | {element.title}");
@@ -155,7 +155,7 @@ namespace RedOwl.UIX.Editor
                 foreach (var edge in change.edgesToCreate)
                 {
                     changeMade = true;
-                    _graph.Connect((Port)edge.output.userData, (Port)edge.input.userData);
+                    _graph.Connect((IPort)edge.output.userData, (IPort)edge.input.userData);
                 }
             }
 

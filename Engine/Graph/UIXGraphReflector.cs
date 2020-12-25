@@ -219,31 +219,33 @@ namespace RedOwl.UIX.Engine
         
         public static readonly TypeCache<IGraph, UIXGraphReflection> GraphCache = new TypeCache<IGraph, UIXGraphReflection>();
         
-        public static Dictionary<string, FlowPort> GetFlowPorts<T>(T node) where T : INode
+        public static Dictionary<string, IFlowPort> GetFlowPorts<T>(T node, PortDirection direction) where T : INode
         {
-            if (!NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, FlowPort>();
-            var output = new Dictionary<string, FlowPort>(data.FlowPorts.Count);
+            if (!NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, IFlowPort>();
+            var output = new Dictionary<string, IFlowPort>(data.FlowPorts.Count);
             foreach (var port in data.FlowPorts)
             {
+                if (port.Direction != direction) continue;
                 // TODO: These need to be "Proxy" objects composed of the data rather then the real ones.
-                var flowPort = (FlowPort) port.Info.GetValue(node);
-                flowPort.Initialize(node, data, port);
-                output.Add(port.PortId(node), flowPort); 
+                var newPort = new FlowPort((FlowPort) port.Info.GetValue(node));
+                newPort.Initialize(node, data, port);
+                output.Add(port.PortId(node), newPort); 
             }
 
             return output;
         }
 
-        public static Dictionary<string, ValuePort> GetValuePorts<T>(T node) where T : INode
+        public static Dictionary<string, IValuePort> GetValuePorts<T>(T node, PortDirection direction) where T : INode
         {
-            if (!NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, ValuePort>();
-            var output = new Dictionary<string, ValuePort>(data.ValuePorts.Count);
+            if (!NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, IValuePort>();
+            var output = new Dictionary<string, IValuePort>(data.ValuePorts.Count);
             foreach (var port in data.ValuePorts)
             {
+                if (port.Direction != direction) continue;
                 // TODO: These need to be "Proxy" objects composed of the data rather then the real ones.
-                var valuePort = (ValuePort) port.Info.GetValue(node);
-                valuePort.Initialize(node, data, port);
-                output.Add(port.PortId(node), valuePort); 
+                var newPort = new ValuePort((ValuePort) port.Info.GetValue(node));
+                newPort.Initialize(node, data, port);
+                output.Add(port.PortId(node), newPort);
             }
 
             return output;

@@ -20,11 +20,11 @@ namespace RedOwl.UIX.Engine
         bool Get(string id, out INode node);
         void Remove<T>(T node) where T : INode;
 
-        void Connect(Port output, Port input);
-        void Disconnect(Port output, Port input);
+        void Connect(IPort output, IPort input);
+        void Disconnect(IPort output, IPort input);
 
-        ValuePort GetValuePort(PortId id);
-        FlowPort GetFlowPort(PortId id);
+        IValuePort GetValuePort(PortId id, PortDirection direction);
+        IFlowPort GetFlowPort(PortId id, PortDirection direction);
     }
 
     [Graph]
@@ -119,11 +119,11 @@ namespace RedOwl.UIX.Engine
             foreach (var node in _nodes)
             {
                 if (node.NodeId == target.NodeId) continue;
-                foreach (var output in node.FlowPorts.Values)
+                foreach (var output in node.FlowOutPorts.Values)
                 {
                     foreach (var input in output.Connections)
                     {
-                        if (target.FlowPorts.TryGetValue(output.PortId, out var _))
+                        if (target.FlowInPorts.TryGetValue(output.Id.Port, out var _))
                         {
                             output.Disconnect(input);
                         }
@@ -137,11 +137,11 @@ namespace RedOwl.UIX.Engine
             foreach (var node in _nodes)
             {
                 if (node.NodeId == target.NodeId) continue;
-                foreach (var input in node.ValuePorts.Values)
+                foreach (var input in node.ValueInPorts.Values)
                 {
                     foreach (var output in input.Connections)
                     {
-                        if (target.ValuePorts.TryGetValue(output.Port, out var _))
+                        if (target.ValueOutPorts.TryGetValue(output.Port, out var _))
                         {
                             input.Disconnect(output);
                         }
@@ -152,7 +152,7 @@ namespace RedOwl.UIX.Engine
 
         // Value Ports - Input -> [Output, Output]
         // Flow Port -  Output -> [Input, Input]
-        public void Connect(Port output, Port input)
+        public void Connect(IPort output, IPort input)
         {
             if (input is ValuePort valueIn && output is ValuePort valueOut)
                 valueIn.Connect(valueOut);
@@ -160,7 +160,7 @@ namespace RedOwl.UIX.Engine
                 flowOut.Connect(flowIn);
         }
 
-        public void Disconnect(Port output, Port input)
+        public void Disconnect(IPort output, IPort input)
         {
             if (input is ValuePort valueIn && output is ValuePort valueOut)
                 valueIn.Disconnect(valueOut);
@@ -168,8 +168,32 @@ namespace RedOwl.UIX.Engine
                 flowOut.Disconnect(flowIn);
         }
 
-        public ValuePort GetValuePort(PortId id) => GetNode(id.Node).ValuePorts[id.Port];
+        public IValuePort GetValuePort(PortId id, PortDirection direction)
+        {
+            var node = GetNode(id.Node);
+            switch (direction)
+            {
+                case PortDirection.Input:
+                    return node.ValueInPorts[id.Port];
+                case PortDirection.Output:
+                    return node.ValueOutPorts[id.Port];
+                default:
+                    return null;
+            }
+        }
 
-        public FlowPort GetFlowPort(PortId id) => GetNode(id.Node).FlowPorts[id.Port];
+        public IFlowPort GetFlowPort(PortId id, PortDirection direction)
+        {
+            var node = GetNode(id.Node);
+            switch (direction)
+            {
+                case PortDirection.Input:
+                    return node.FlowInPorts[id.Port];
+                case PortDirection.Output:
+                    return node.FlowOutPorts[id.Port];
+                default:
+                    return null;
+            }
+        }
     }
 }

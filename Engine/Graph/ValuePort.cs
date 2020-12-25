@@ -4,16 +4,26 @@ using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
+    public interface IValuePort : IPort
+    {
+        IEnumerator Execute();
+    }
+    
     [Serializable]
-    public class ValuePort : Port<UIXValuePortReflection>, ISerializationCallbackReceiver
+    public class ValuePort : Port<UIXValuePortReflection>, IValuePort, ISerializationCallbackReceiver
     {
         [SerializeField] protected string serializationData;
         
-        [SerializeField] protected BetterType portType;
+        [SerializeField] protected BetterType valueType;
         
         protected ValuePort(INode node) : base(node) {}
+
+        public ValuePort(IValuePort port) : base(port)
+        {
+            valueType = port.ValueType;
+        }
         
-        public Type PortType => portType;
+        public Type ValueType => valueType;
 
         public void Set<T>(IFlow flow, T value)
         {
@@ -34,7 +44,7 @@ namespace RedOwl.UIX.Engine
             //Debug.Log($"Initializing Value Port '{this}' for node '{node}'");
         }
 
-        public override IEnumerator Execute()
+        public IEnumerator Execute()
         {
             throw new NotImplementedException();
         }
@@ -56,7 +66,7 @@ namespace RedOwl.UIX.Engine
         
         public ValuePort(INode node, T defaultValue = default) : base(node)
         {
-            portType = typeof(T);
+            valueType = typeof(T);
             DefaultValue = defaultValue;
         }
         

@@ -66,7 +66,7 @@ namespace RedOwl.UIX.Engine
             _cache.Clear();
             foreach (var node in _startNodes)
             {
-                foreach (var output in node.FlowPorts.Values)
+                foreach (var output in node.FlowOutPorts.Values)
                 {
                     // Check if Is Output otherwise skip?
                     var enumerator = WalkOutput(output);
@@ -75,16 +75,16 @@ namespace RedOwl.UIX.Engine
             }
         }
 
-        private IEnumerator WalkOutput(Port output)
+        private IEnumerator WalkOutput(IFlowPort output)
         {
             while (output.Execute().MoveNext()) {}
             foreach (var input in output.Connections)
             {
-                yield return WalkInput(_graph.GetFlowPort(input));
+                yield return WalkInput(_graph.GetFlowPort(input, PortDirection.Input));
             }
         }
 
-        private IEnumerator WalkInput(Port port)
+        private IEnumerator WalkInput(IFlowPort port)
         {
             var enumerator = port.Execute();
             while (enumerator.MoveNext())

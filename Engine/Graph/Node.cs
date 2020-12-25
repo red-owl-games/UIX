@@ -13,8 +13,11 @@ namespace RedOwl.UIX.Engine
         string NodeTitle { get; }
         Rect NodeRect { get; set; }
         Vector2 NodePosition { get; set; }
-        Dictionary<string, ValuePort> ValuePorts { get; }
-        Dictionary<string, FlowPort> FlowPorts { get; }
+
+        Dictionary<string, IValuePort> ValueInPorts { get; }
+        Dictionary<string, IValuePort> ValueOutPorts { get; }
+        Dictionary<string, IFlowPort> FlowInPorts { get; }
+        Dictionary<string, IFlowPort> FlowOutPorts { get; }
     }
 
     [Serializable]
@@ -59,11 +62,17 @@ namespace RedOwl.UIX.Engine
             set => nodeRect.position = value;
         }
 
-        private Dictionary<string, ValuePort> _valuePorts;
-        public Dictionary<string, ValuePort> ValuePorts => _valuePorts ?? (_valuePorts = UIXGraphReflector.GetValuePorts(this));
+        private Dictionary<string, IValuePort> _valueInPorts;
+        public Dictionary<string, IValuePort> ValueInPorts => _valueInPorts ?? (_valueInPorts = UIXGraphReflector.GetValuePorts(this, PortDirection.Input));
+        
+        private Dictionary<string, IValuePort> _valueOutPorts;
+        public Dictionary<string, IValuePort> ValueOutPorts => _valueOutPorts ?? (_valueOutPorts = UIXGraphReflector.GetValuePorts(this, PortDirection.Output));
 
-        private Dictionary<string, FlowPort> _flowPorts;
-        public Dictionary<string, FlowPort> FlowPorts => _flowPorts ?? (_flowPorts = UIXGraphReflector.GetFlowPorts(this));
+        private Dictionary<string, IFlowPort> _flowInPorts;
+        public Dictionary<string, IFlowPort> FlowInPorts => _flowInPorts ?? (_flowInPorts = UIXGraphReflector.GetFlowPorts(this, PortDirection.Input));
+
+        private Dictionary<string, IFlowPort> _flowOutPorts;
+        public Dictionary<string, IFlowPort> FlowOutPorts => _flowOutPorts ?? (_flowOutPorts = UIXGraphReflector.GetFlowPorts(this, PortDirection.Output));
 
         protected Node()
         {
@@ -80,8 +89,11 @@ namespace RedOwl.UIX.Engine
             try
             {
                 // Hack to trigger initialization of ports
-                _valuePorts = ValuePorts;
-                _flowPorts = FlowPorts;
+                _valueInPorts = ValueInPorts;
+                _valueOutPorts = ValueOutPorts;
+                _flowInPorts = FlowInPorts;
+                _flowOutPorts = FlowOutPorts;
+                
                 OnInitialize();
                 IsInitialized = true;
             }
