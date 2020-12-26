@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
@@ -13,7 +11,9 @@ namespace RedOwl.UIX.Engine
         string NodeTitle { get; }
         Rect NodeRect { get; set; }
         Vector2 NodePosition { get; set; }
+        bool IsRootNode { get; }
 
+        // TODO: Convert to KeyedCollection based on performance hit of using Dictionary.Values - which seems to create a ValueCollection every time?
         Dictionary<string, IValuePort> ValueInPorts { get; }
         Dictionary<string, IValuePort> ValueOutPorts { get; }
         Dictionary<string, IFlowPort> FlowInPorts { get; }
@@ -60,6 +60,22 @@ namespace RedOwl.UIX.Engine
         {
             get => nodeRect.position;
             set => nodeRect.position = value;
+        }
+
+        private bool _isRootNodeCalculated;
+        private bool _isRootNode;
+
+        public bool IsRootNode
+        {
+            get
+            {
+                if (_isRootNodeCalculated == false)
+                {
+                    _isRootNode = UIXGraphReflector.NodeCache.Get(GetType(), out var data) && data.IsRootNode;
+                    _isRootNodeCalculated = true;
+                }
+                return _isRootNode;
+            }
         }
 
         private Dictionary<string, IValuePort> _valueInPorts;

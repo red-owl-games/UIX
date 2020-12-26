@@ -6,7 +6,7 @@ namespace RedOwl.UIX.Engine
 {
     public interface IValuePort : IPort
     {
-        IEnumerator Execute();
+        IEnumerator Execute(IFlow flow);
     }
     
     [Serializable]
@@ -44,9 +44,10 @@ namespace RedOwl.UIX.Engine
             //Debug.Log($"Initializing Value Port '{this}' for node '{node}'");
         }
 
-        public IEnumerator Execute()
+        public IEnumerator Execute(IFlow flow)
         {
-            throw new NotImplementedException();
+            // TODO: Implement
+            yield break;
         }
     }
     

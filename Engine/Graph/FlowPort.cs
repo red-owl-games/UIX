@@ -5,7 +5,7 @@ namespace RedOwl.UIX.Engine
 {
     public interface IFlowPort : IPort
     {
-        IEnumerator Execute();
+        IEnumerator Execute(IFlow flow);
     }
     
     [Serializable]
@@ -29,7 +29,11 @@ namespace RedOwl.UIX.Engine
             //Debug.Log($"Initializing Flow Port '{this}' for node '{node}'");
         }
 
-        public IEnumerator Execute() => throw new NotImplementedException();
+        public IEnumerator Execute(IFlow flow)
+        {
+            // TODO: Implement
+            yield break;
+        }
 
         private static Type _valueType = typeof(FlowPort);
         public Type ValueType => _valueType;

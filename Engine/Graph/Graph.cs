@@ -6,16 +6,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
     public interface IGraph : INode
     {
-        INode GetNode(string id);
-        IEnumerable<T> GetNodes<T>() where T : INode;
         IEnumerable<INode> Nodes { get; }
         int NodeCount { get; }
+        INode GetNode(string id);
+        IEnumerable<T> GetNodes<T>() where T : INode;
+        IEnumerable<INode> GetNodes(Type type);
         T Add<T>(T node) where T : INode;
         bool Get(string id, out INode node);
         void Remove<T>(T node) where T : INode;
@@ -23,8 +25,9 @@ namespace RedOwl.UIX.Engine
         void Connect(IPort output, IPort input);
         void Disconnect(IPort output, IPort input);
 
-        IValuePort GetValuePort(PortId id, PortDirection direction);
-        IFlowPort GetFlowPort(PortId id, PortDirection direction);
+        // IValuePort GetValuePort(PortId id, PortDirection direction);
+        // IFlowPort GetFlowPort(PortId id, PortDirection direction);
+        
     }
 
     [Graph]
@@ -69,8 +72,7 @@ namespace RedOwl.UIX.Engine
             }
         }
 
-        // TODO: this might not be needed
-        public IEnumerable GetNodes(Type nodeType)
+        public IEnumerable<INode> GetNodes(Type nodeType)
         {
             foreach (var node in _nodes)
             {
@@ -78,7 +80,7 @@ namespace RedOwl.UIX.Engine
                     yield return node;
             }
         }
-        
+
         public T Add<T>(T node) where T : INode
         {
             _nodes.Add(node);
@@ -168,32 +170,32 @@ namespace RedOwl.UIX.Engine
                 flowOut.Disconnect(flowIn);
         }
 
-        public IValuePort GetValuePort(PortId id, PortDirection direction)
-        {
-            var node = GetNode(id.Node);
-            switch (direction)
-            {
-                case PortDirection.Input:
-                    return node.ValueInPorts[id.Port];
-                case PortDirection.Output:
-                    return node.ValueOutPorts[id.Port];
-                default:
-                    return null;
-            }
-        }
-
-        public IFlowPort GetFlowPort(PortId id, PortDirection direction)
-        {
-            var node = GetNode(id.Node);
-            switch (direction)
-            {
-                case PortDirection.Input:
-                    return node.FlowInPorts[id.Port];
-                case PortDirection.Output:
-                    return node.FlowOutPorts[id.Port];
-                default:
-                    return null;
-            }
-        }
+        // public IValuePort GetValuePort(PortId id, PortDirection direction)
+        // {
+        //     var node = GetNode(id.Node);
+        //     switch (direction)
+        //     {
+        //         case PortDirection.Input:
+        //             return node.ValueInPorts[id.Port];
+        //         case PortDirection.Output:
+        //             return node.ValueOutPorts[id.Port];
+        //         default:
+        //             return null;
+        //     }
+        // }
+        //
+        // public IFlowPort GetFlowPort(PortId id, PortDirection direction)
+        // {
+        //     var node = GetNode(id.Node);
+        //     switch (direction)
+        //     {
+        //         case PortDirection.Input:
+        //             return node.FlowInPorts[id.Port];
+        //         case PortDirection.Output:
+        //             return node.FlowOutPorts[id.Port];
+        //         default:
+        //             return null;
+        //     }
+        // }
     }
 }

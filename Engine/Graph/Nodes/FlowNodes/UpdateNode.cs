@@ -1,6 +1,6 @@
 namespace RedOwl.UIX.Engine
 {
-    [Node("Flow", Path = "Flow Control")]
+    [Node("Flow", Path = "Flow Control", IsRootNode = true)]
     public class UpdateNode : Node
     {
         [FlowOut] public FlowPort Update;

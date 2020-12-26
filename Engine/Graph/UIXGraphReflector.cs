@@ -85,6 +85,8 @@ namespace RedOwl.UIX.Engine
         
         public Vector2 Size { get; set; }
         
+        public bool IsRootNode { get; set; }
+        
         public HashSet<string> Tags { get; set; }
         
         public List<UIXValuePortReflection> ValuePorts { get; set; }
@@ -95,6 +97,7 @@ namespace RedOwl.UIX.Engine
         private Dictionary<ContextMenu, MethodInfo> _contextMethods;
         
         public IReadOnlyDictionary<ContextMenu, MethodInfo> ContextMethods => _contextMethods;
+        
 
         public bool ShouldCache(Type type)
         {
@@ -118,6 +121,7 @@ namespace RedOwl.UIX.Engine
             Tags = isNull ? new HashSet<string>() : new HashSet<string>(attr.Tags);
             Deletable = isNull || attr.Deletable;
             Moveable = isNull || attr.Moveable;
+            IsRootNode = isNull ? false : attr.IsRootNode;
             Size = isNull ? _defaultSize : attr.Size;
         }
 
