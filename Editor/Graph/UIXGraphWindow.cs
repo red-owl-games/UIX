@@ -78,6 +78,7 @@ namespace RedOwl.UIX.Editor
 
         private void CreateView()
         {
+            // TODO: Make GraphView work differently during "runtime" (IE no edits?)
             _view = new UIXGraphView(_lastAsset);
             rootVisualElement.Add(_view);
             _view.StretchToParentSize();

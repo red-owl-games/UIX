@@ -19,7 +19,6 @@ namespace RedOwl.UIX.Editor
                 // if (info.GetAttribute<FlowOutAttribute>() != null) propertyInfos.RemoveAt(i);
                 // if (info.GetAttribute<ValueInAttribute>() != null) propertyInfos.RemoveAt(i);
                 // if (info.GetAttribute<ValueOutAttribute>() != null) propertyInfos.RemoveAt(i);
-                // if (info.GetAttribute<ValueInOutAttribute>() != null) propertyInfos.RemoveAt(i);
             }
         }
     }

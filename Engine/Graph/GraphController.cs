@@ -31,7 +31,6 @@ namespace RedOwl.UIX.Engine
         private void Execute()
         {
             if (graphAsset == null || graphAsset.graph == null) return;
-            Graph.Initialize();
             Debug.Log($"Execute Graph '{graphAsset.name}'");
             new Flow(Graph).Execute();
             //StartCoroutine(WalkAsync(flow));
@@ -47,7 +46,6 @@ namespace RedOwl.UIX.Engine
         
         private void Awake()
         {
-            Graph.Initialize(); // TODO: should this be implicit somewhere?
             _awakeFlow = new Flow<StartNode>(Graph);
             _startFlow = new Flow<StartNode>(Graph);
             _updateFlow = new Flow<UpdateNode>(Graph);

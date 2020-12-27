@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -11,8 +9,7 @@ namespace RedOwl.UIX.Engine
         INode[] RootNodes { get; }
         T Get<T>(IPort port);
         bool Get<T>(IPort port, out T output);
-
-        void Set<T>(IPort port, T value);
+        void Set(IPort port, object value);
 
         void Execute();
     }
@@ -50,7 +47,7 @@ namespace RedOwl.UIX.Engine
             return false;
         }
 
-        public void Set<T>(IPort port, T value)
+        public void Set(IPort port, object value)
         {
             // TODO: use Converter.Convert ?
             if (ContainsKey(port.Id))
@@ -59,21 +56,22 @@ namespace RedOwl.UIX.Engine
             }
             else
             {
-                this.Add(port.Id, value);
+                Add(port.Id, value);
             }
         }
         
         public void Execute()
         {
+            Graph.Initialize();
             Clear();
-            //using(new Timer("Flow.Execution"))
-            //{
-            foreach (var node in RootNodes)
+            using(new Timer("Flow.Execution"))
             {
-                Debug.Log($"Starting Root Node Walk from '[{node}]'");
-                WalkFlowPorts(this, node);
+                foreach (var node in RootNodes)
+                {
+                    Debug.Log($"Starting Root Node Walk from '[{node}]'");
+                    WalkFlowPorts(this, node);
+                }
             }
-            //}
         }
 
         public static void ExecutePort(IFlow flow, IValuePort port)
@@ -94,9 +92,20 @@ namespace RedOwl.UIX.Engine
             // Recursively walks back up the value input ports connections to make sure values are "set" into the flow
             foreach (var port in node.ValueInPorts.Values)
             {
-                Debug.Log($"Getting '({node}){port}' value into Flow");
-                // TODO: does this need to walk upwards?
-                ExecutePort(flow, port);
+                WalkValueIn(flow, node, port);
+            }
+        }
+
+        public static void WalkValueIn(IFlow flow, INode node, IValuePort input)
+        {
+            Debug.Log($"Walking ValueIn '[{node}Node]{input}'");
+            ExecutePort(flow, input);
+            foreach (var connection in input.Connections)
+            {
+                var nextNode = flow.Graph.GetNode(connection.Node); //  TODO: Needs saftey check?
+                var output = nextNode.ValueOutPorts[connection.Port]; // TODO: Needs saftey check?
+                Debug.Log($"Pulled Value for '[{node}Node]{input}' from '[{nextNode}Node]{output}'");
+                //flow.Set(input, output.GetValue());
             }
         }
 
@@ -112,20 +121,21 @@ namespace RedOwl.UIX.Engine
 
         public static void WalkFlowOut(IFlow flow, INode node, IFlowPort output)
         {
-            Debug.Log($"Walking Output '[{node}Node]{output}'");
+            Debug.Log($"Walking FlowOut '[{node}Node]{output}'");
             if (node.IsRootNode) WalkValuePorts(flow, node);
             ExecutePort(flow, output);
             foreach (var input in output.Connections)
             {
                 var nextNode = flow.Graph.GetNode(input.Node); //  TODO: Needs saftey check?
                 var nextPort = nextNode.FlowInPorts[input.Port]; // TODO: Needs saftey check?
+                Debug.Log($"Traversing Towards '[{nextNode}Node]{nextPort}'");
                 WalkFlowIn(flow, nextNode, nextPort);
             }
         }
 
         public static void WalkFlowIn(IFlow flow, INode node, IFlowPort input)
         {
-            Debug.Log($"Walking Input '[{node}Node]{input}'");
+            Debug.Log($"Walking FlowIn '[{node}Node]{input}'");
             WalkValuePorts(flow, node);
             var enumerator = input.Execute(flow);
             while (enumerator.MoveNext())
