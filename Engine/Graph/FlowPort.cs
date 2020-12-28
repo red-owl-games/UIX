@@ -37,14 +37,14 @@ namespace RedOwl.UIX.Engine
             var parameters = portData.Callback.GetParameters();
             if (parameters.Length != 1)
             {
-                Debug.LogWarning($"FlowPort Callback for '{node.NodeTitle}Node.{portData.Callback.Name}' has {parameters.Length} parameter(s).  Can only accept 1 parameter of type '{_flowType}'");
+                Debug.LogWarning($"FlowPort Callback for '{node.NodeTitle}Node.{portData.Callback.Name}' has {parameters.Length} parameter(s).  Can only accept 1 parameter of type 'IFlow'");
                 return;
             }
 
             var paramType = parameters[0].ParameterType;
-            if (!typeof(IFlow).IsAssignableFrom(paramType))
+            if (paramType != _flowType)
             {
-                Debug.LogWarning($"FlowPort Callback for '{node.NodeTitle}Node.{portData.Callback.Name}' has 1 parameter that takes type '{paramType}'.  Can only accept 1 parameter of type '{_flowType}'");
+                Debug.LogWarning($"FlowPort Callback for '{node.NodeTitle}Node.{portData.Callback.Name}' has 1 parameter that takes type '{paramType}'.  Can only accept 1 parameter of type 'IFlow'");
                 return;
             }
             _hasCallback = false;
@@ -71,20 +71,20 @@ namespace RedOwl.UIX.Engine
         {
             if (_hasCallback)
             {
-                Debug.Log($"Entered Flowport Execute Function");
-                if (_simpleCallback != null)
-                {
-                    
-                }
+                _simpleCallback?.Invoke(flow);
 
                 if (_syncCallback != null)
                 {
-                    
+                    yield return _syncCallback(flow);
                 }
 
                 if (_asyncCallback != null)
                 {
-                    
+                    var enumerator = _asyncCallback(flow);
+                    while (enumerator.MoveNext())
+                    {
+                        yield return enumerator.Current;
+                    }
                 }
             }
             

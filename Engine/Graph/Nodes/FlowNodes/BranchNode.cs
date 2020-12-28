@@ -21,7 +21,7 @@ namespace RedOwl.UIX.Engine
             False = new FlowPort(this);
         }
         
-        private FlowPort OnEnter(IFlow flow)
+        private IFlowPort OnEnter(IFlow flow)
         {
             return flow.Get<bool>(Condition) ? True : False;
         }

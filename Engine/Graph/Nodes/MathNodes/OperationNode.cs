@@ -12,7 +12,7 @@ namespace RedOwl.UIX.Engine
 
         public Operation operation = Operation.Add;
         
-        protected override void Calculate(Flow flow)
+        protected override void Calculate(IFlow flow)
         {
             switch (operation)
             {

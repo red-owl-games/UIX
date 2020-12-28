@@ -16,7 +16,7 @@ namespace RedOwl.UIX.Engine
 
         public Comparison comparison = Comparison.Equal;
         
-        protected override void Calculate(Flow flow)
+        protected override void Calculate(IFlow flow)
         {
             switch (comparison)
             {

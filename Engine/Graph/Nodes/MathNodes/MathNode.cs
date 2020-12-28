@@ -21,12 +21,12 @@ namespace RedOwl.UIX.Engine
             Output = new ValuePort<TOutput>(this);
         }
 
-        protected void OnEnter(Flow flow)
+        protected void OnEnter(IFlow flow)
         {
             Calculate(flow);
         }
         
-        protected abstract void Calculate(Flow flow);
+        protected abstract void Calculate(IFlow flow);
     }
     
     [Node("Math", Path = "Math")]
@@ -51,11 +51,12 @@ namespace RedOwl.UIX.Engine
             Output = new ValuePort<TOutput>(this);
         }
 
-        protected void OnEnter(Flow flow)
+        protected IFlowPort OnEnter(IFlow flow)
         {
             Calculate(flow);
+            return Exit;
         }
         
-        protected abstract void Calculate(Flow flow);
+        protected abstract void Calculate(IFlow flow);
     }
 }
