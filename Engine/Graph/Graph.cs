@@ -156,18 +156,19 @@ namespace RedOwl.UIX.Engine
         // Flow Port -  Output -> [Input, Input]
         public void Connect(IPort output, IPort input)
         {
-            if (input is ValuePort valueIn && output is ValuePort valueOut)
-                valueIn.Connect(valueOut);
-            if (input is FlowPort flowIn && output is FlowPort flowOut) 
-                flowOut.Connect(flowIn);
+            // TODO: if we can figure out what node each port came from we can stop storing the node ID with the port
+            if (input is IValuePort valueIn && output is IValuePort valueOut)
+                valueIn.Connect(valueOut.Id);
+            if (input is IFlowPort flowIn && output is IFlowPort flowOut) 
+                flowOut.Connect(flowIn.Id);
         }
 
         public void Disconnect(IPort output, IPort input)
         {
-            if (input is ValuePort valueIn && output is ValuePort valueOut)
-                valueIn.Disconnect(valueOut);
-            if (input is FlowPort flowIn && output is FlowPort flowOut)
-                flowOut.Disconnect(flowIn);
+            if (input is IValuePort valueIn && output is IValuePort valueOut)
+                valueIn.Disconnect(valueOut.Id);
+            if (input is IFlowPort flowIn && output is IFlowPort flowOut)
+                flowOut.Disconnect(flowIn.Id);
         }
 
         // public IValuePort GetValuePort(PortId id, PortDirection direction)

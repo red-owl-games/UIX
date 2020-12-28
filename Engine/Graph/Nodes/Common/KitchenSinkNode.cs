@@ -16,20 +16,20 @@ namespace RedOwl.UIX.Engine
         
         // Primatives
         
-        [ValueIn, ValueOut] public ValuePort String;
-        [ValueIn, ValueOut] public ValuePort Char;
-        [ValueIn, ValueOut] public ValuePort Bool;
-        [ValueIn, ValueOut] public ValuePort Float;
-        [ValueIn, ValueOut] public ValuePort Double;
+        [ValueIn, ValueOut] public ValuePort<string> String;
+        [ValueIn, ValueOut] public ValuePort<char> Char;
+        [ValueIn, ValueOut] public ValuePort<bool> Bool;
+        [ValueIn, ValueOut] public ValuePort<float> Float;
+        [ValueIn, ValueOut] public ValuePort<double> Double;
         // [ValueIn, ValueOut] public ValuePort Decimal; // Does Not Serialize
-        [ValueIn, ValueOut] public ValuePort Short;
-        [ValueIn, ValueOut] public ValuePort Int;
-        [ValueIn, ValueOut] public ValuePort Long;
-        [ValueIn, ValueOut] public ValuePort UShort;
-        [ValueIn, ValueOut] public ValuePort UInt;
-        [ValueIn, ValueOut] public ValuePort ULong;
-        [ValueIn, ValueOut] public ValuePort SByte;
-        [ValueIn, ValueOut] public ValuePort Byte;
+        [ValueIn, ValueOut] public ValuePort<short> Short;
+        [ValueIn, ValueOut] public ValuePort<int> Int;
+        [ValueIn, ValueOut] public ValuePort<long> Long;
+        [ValueIn, ValueOut] public ValuePort<ushort> UShort;
+        [ValueIn, ValueOut] public ValuePort<uint> UInt;
+        [ValueIn, ValueOut] public ValuePort<ulong> ULong;
+        [ValueIn, ValueOut] public ValuePort<sbyte> SByte;
+        [ValueIn, ValueOut] public ValuePort<byte> Byte;
         
         // Array
         // [ValueIn, ValueOut] public ValuePort StringArray; // Caused a Crash on Recompile
@@ -47,18 +47,18 @@ namespace RedOwl.UIX.Engine
         // [ValueIn, ValueOut] public ValuePort TimeSpan; // Does Not Serialize
         
         // Unity Types
-        [ValueIn, ValueOut] public ValuePort Color;
-        [ValueIn, ValueOut] public ValuePort Color32;
-        [ValueIn, ValueOut] public ValuePort Vector2;
-        [ValueIn, ValueOut] public ValuePort Vector3;
-        [ValueIn, ValueOut] public ValuePort Vector4;
-        [ValueIn, ValueOut] public ValuePort Vector2Int;
-        [ValueIn, ValueOut] public ValuePort Vector3Int;
-        [ValueIn, ValueOut] public ValuePort Quaternion;
-        [ValueIn, ValueOut] public ValuePort Bounds;
-        [ValueIn, ValueOut] public ValuePort BoundsInt;
-        [ValueIn, ValueOut] public ValuePort Rect;
-        [ValueIn, ValueOut] public ValuePort RectInt;
+        [ValueIn, ValueOut] public ValuePort<Color> Color;
+        [ValueIn, ValueOut] public ValuePort<Color32> Color32;
+        [ValueIn, ValueOut] public ValuePort<Vector2> Vector2;
+        [ValueIn, ValueOut] public ValuePort<Vector3> Vector3;
+        [ValueIn, ValueOut] public ValuePort<Vector4> Vector4;
+        [ValueIn, ValueOut] public ValuePort<Vector2Int> Vector2Int;
+        [ValueIn, ValueOut] public ValuePort<Vector3Int> Vector3Int;
+        [ValueIn, ValueOut] public ValuePort<Quaternion> Quaternion;
+        [ValueIn, ValueOut] public ValuePort<Bounds> Bounds;
+        [ValueIn, ValueOut] public ValuePort<BoundsInt> BoundsInt;
+        [ValueIn, ValueOut] public ValuePort<Rect> Rect;
+        [ValueIn, ValueOut] public ValuePort<RectInt> RectInt;
         // [ValueIn, ValueOut] public ValuePort AnimationCurve; // Caused a Crash on Recompile
         // [ValueIn, ValueOut] public ValuePort Gradient; // Caused a Crash on Recompile
         // [ValueIn, ValueOut] public ValuePort LayerMask; // Caused a Crash on Recompile
@@ -118,7 +118,7 @@ namespace RedOwl.UIX.Engine
             Quaternion = new ValuePort<Quaternion>(this);
             Bounds = new ValuePort<Bounds>(this);
             BoundsInt = new ValuePort<BoundsInt>(this);
-            Rect = new ValuePort<Bounds>(this);
+            Rect = new ValuePort<Rect>(this);
             RectInt = new ValuePort<RectInt>(this);
             // AnimationCurve = new ValuePort<AnimationCurve>(this);
             // Gradient = new ValuePort<Gradient>(this);

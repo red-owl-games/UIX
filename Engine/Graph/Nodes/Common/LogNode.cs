@@ -5,7 +5,7 @@ namespace RedOwl.UIX.Engine
     [Node("Common", Path = "Common")]
     public class LogNode : Node
     {
-        [ValueIn] public ValuePort Message;
+        [ValueIn] public ValuePort<string> Message;
         
         [FlowIn(Callback = nameof(OnEnter))] public FlowPort Enter;
 

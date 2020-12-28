@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -120,8 +119,6 @@ namespace RedOwl.UIX.Engine
         public void Disconnect(PortId output) => connections.Remove(output);
 
         public override string ToString() => $"[{Name} | {Direction} | {Capacity}]";
-
-        public static implicit operator PortId(Port port) => port.id;
     }
 
     public abstract class Port<T> : Port where T : IPortReflectionData

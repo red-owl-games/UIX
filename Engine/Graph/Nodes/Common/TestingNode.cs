@@ -9,7 +9,7 @@ namespace RedOwl.UIX.Engine
         [FlowIn(Callback = nameof(OnEnter))] public FlowPort Enter;
         [FlowOut(Callback = nameof(OnExit))] public FlowPort Exit;
 
-        [ValueIn, ValueOut] public ValuePort String;
+        [ValueIn, ValueOut] public ValuePort<string> String;
 
         public TestingNode()
         {

@@ -105,7 +105,7 @@ namespace RedOwl.UIX.Engine
                 var nextNode = flow.Graph.GetNode(connection.Node); //  TODO: Needs saftey check?
                 var output = nextNode.ValueOutPorts[connection.Port]; // TODO: Needs saftey check?
                 Debug.Log($"Pulled Value for '[{node}Node]{input}' from '[{nextNode}Node]{output}'");
-                //flow.Set(input, output.GetValue());
+                flow.Set(input, output.Current);
             }
         }
 

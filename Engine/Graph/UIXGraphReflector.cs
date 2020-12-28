@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
-    public class UIXValuePortReflection : IPortReflectionData
+    public class ValuePortSettings : IPortReflectionData
     {
         public FieldInfo Info { get; }
 
@@ -19,24 +19,17 @@ namespace RedOwl.UIX.Engine
 
         public bool ShowElement { get; }
 
-
-        public UIXValuePortReflection(FieldInfo info, PortDirection direction, PortCapacity capacity, string name = null)
+        public ValuePortSettings(FieldInfo info, IValuePortAttribute attr)
         {
             Info = info;
-            Name = name ?? info.Name;
-            Direction = direction;
-            Capacity = capacity;
+            Name = attr.Name ?? info.Name;
+            Direction = attr.Direction;
+            Capacity = attr.Capacity;
             ShowElement = info.IsFamily;
-            //IsUsingFieldName = name != null; ???
-        }
-        
-        public string PortId(INode node)
-        {
-            return Info.GetValue(node) is Port port ? port.PortId : "";
         }
     }
     
-     public class UIXFlowPortReflection : IPortReflectionData
+     public class FlowPortSettings : IPortReflectionData
      {
          private static readonly Type EnumerableType = typeof(IEnumerable);
          
@@ -48,28 +41,23 @@ namespace RedOwl.UIX.Engine
          
          public PortCapacity Capacity { get; }
          
-         public bool IsAsync { get; }
-
-         public UIXFlowPortReflection(FieldInfo info, PortDirection direction, PortCapacity capacity, string name = null)
-         {
-             Info = info;
-             Name = name ?? info.Name;
-             Direction = direction;
-             Capacity = capacity;
-             IsAsync = false;
-         }
+         public MethodInfo Callback { get; }
          
-         public string PortId(INode node)
+         public FlowPortSettings(FieldInfo fieldInfo, MethodInfo methodInfo, IFlowPortAttribute attr)
          {
-             return Info.GetValue(node) is Port port ? port.PortId : "";
+             Info = fieldInfo;
+             Name = attr.Name ?? fieldInfo.Name;
+             Direction = attr.Direction;
+             Capacity = attr.Capacity;
+             Callback = methodInfo;
          }
      }
 
     public class UIXNodeReflection : ITypeStorage
     {
-        private static BindingFlags _bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
-        private static Type _isNodeAttribute = typeof(NodeAttribute);
-        private static Vector2 _defaultSize = new Vector2(100, 300);
+        private const BindingFlags BindingFlags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.FlattenHierarchy;
+        private static Type _nodeType = typeof(INode);
+        private static readonly Vector2 DefaultSize = new Vector2(100, 300);
         
         public Type Type { get; set; }
 
@@ -89,9 +77,9 @@ namespace RedOwl.UIX.Engine
         
         public HashSet<string> Tags { get; set; }
         
-        public List<UIXValuePortReflection> ValuePorts { get; set; }
+        public List<ValuePortSettings> ValuePorts { get; set; }
         
-        public List<UIXFlowPortReflection> FlowPorts { get; set; }
+        public List<FlowPortSettings> FlowPorts { get; set; }
         
         private Dictionary<string, MethodInfo> _methods;
         private Dictionary<ContextMenu, MethodInfo> _contextMethods;
@@ -122,15 +110,14 @@ namespace RedOwl.UIX.Engine
             Deletable = isNull || attr.Deletable;
             Moveable = isNull || attr.Moveable;
             IsRootNode = isNull ? false : attr.IsRootNode;
-            Size = isNull ? _defaultSize : attr.Size;
+            Size = isNull ? DefaultSize : attr.Size;
         }
 
         private void ExtractValuePorts(Type type)
         {
-            ValuePorts = new List<UIXValuePortReflection>();
-            // This OrderBy sorts the fields by subclasses first
-            // we may want to put an "order" value or at least have InOut attributes process first so they are drawn first
-            var infos = type.GetFields(_bindingFlags).OrderBy(field => field.MetadataToken);
+            ValuePorts = new List<ValuePortSettings>();
+            // This OrderBy sorts the fields by the order they are defined in the code and subclass fields first
+            var infos = type.GetFields(BindingFlags).OrderBy(field => field.MetadataToken);
             foreach (var info in infos)
             {
                 var attrs = info.GetCustomAttributes(true);
@@ -139,22 +126,24 @@ namespace RedOwl.UIX.Engine
                     switch (attr)
                     {
                         case ValueInAttribute input:
-                            ValuePorts.Add(new UIXValuePortReflection(info, PortDirection.Input, input.Capacity, input.Name));
+                            ValuePorts.Add(new ValuePortSettings(info, input));
                             break;
                         case ValueOutAttribute output:
-                            ValuePorts.Add(new UIXValuePortReflection(info, PortDirection.Output, output.Capacity, output.Name));
+                            ValuePorts.Add(new ValuePortSettings(info, output));
                             break;
                     }
                 }
             }
-            // TODO: is this needed?
-            //Ports.Sort((a,b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+            //ValuePorts.Sort((a,b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         }
 
         private void ExtractFlowPorts(Type type)
         {
-            FlowPorts = new List<UIXFlowPortReflection>();
-            var fieldInfos = type.GetFields(_bindingFlags).OrderBy(field => field.MetadataToken);
+            FlowPorts = new List<FlowPortSettings>();
+            // This OrderBy sorts the fields by the order they are defined in the code and subclass fields first
+            var methodInfos = type.GetMethodTable(BindingFlags);
+            methodInfos.Add(string.Empty, null);
+            var fieldInfos = type.GetFields(BindingFlags).OrderBy(field => field.MetadataToken);
             foreach (var fieldInfo in fieldInfos)
             {
                 var attrs = fieldInfo.GetCustomAttributes(true);
@@ -163,24 +152,15 @@ namespace RedOwl.UIX.Engine
                     switch (attr)
                     {
                         case FlowInAttribute input:
-                            // if (input.Callback != null)
-                            // {
-                            //     var info = type.GetMethod(input.Callback, _bindingFlags);
-                            //     //if (info != null && info.GetParameters().Length == 1) Debug.Log($"Input Has Callback - {info.ReturnType}");
-                            // }
-                            FlowPorts.Add(new UIXFlowPortReflection(fieldInfo, PortDirection.Input, input.Capacity, input.Name));
+                            FlowPorts.Add(new FlowPortSettings(fieldInfo, methodInfos[input.Callback], input));
                             break;
                         case FlowOutAttribute output:
-                            // if (output.Callback != null)
-                            // {
-                            //     var info = type.GetMethod(output.Callback, _bindingFlags);
-                            //     //if (info != null && info.GetParameters().Length == 1) Debug.Log($"Output Has Callback - {info.ReturnType}");
-                            // }
-                            FlowPorts.Add(new UIXFlowPortReflection(fieldInfo, PortDirection.Output, output.Capacity, output.Name));
+                            FlowPorts.Add(new FlowPortSettings(fieldInfo, methodInfos[output.Callback], output));
                             break;
                     }
                 }
             }
+            //FlowPorts.Sort((a,b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         }
         
         private void ExtractContextMethods(Type type)
@@ -230,10 +210,9 @@ namespace RedOwl.UIX.Engine
             foreach (var port in data.FlowPorts)
             {
                 if (port.Direction != direction) continue;
-                // TODO: These need to be "Proxy" objects composed of the data rather then the real ones.
                 var newPort = new FlowPort((FlowPort) port.Info.GetValue(node));
                 newPort.Initialize(node, data, port);
-                output.Add(port.PortId(node), newPort); 
+                output.Add(newPort.PortId, newPort); 
             }
 
             return output;
@@ -246,10 +225,9 @@ namespace RedOwl.UIX.Engine
             foreach (var port in data.ValuePorts)
             {
                 if (port.Direction != direction) continue;
-                // TODO: These need to be "Proxy" objects composed of the data rather then the real ones.
-                var newPort = new ValuePort((ValuePort) port.Info.GetValue(node));
+                var newPort = new ValuePort((IValuePort) port.Info.GetValue(node));
                 newPort.Initialize(node, data, port);
-                output.Add(port.PortId(node), newPort);
+                output.Add(newPort.PortId, newPort);
             }
 
             return output;

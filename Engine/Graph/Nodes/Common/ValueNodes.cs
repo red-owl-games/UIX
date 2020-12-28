@@ -5,7 +5,7 @@ namespace RedOwl.UIX.Engine
     [Node("Common", Path = "Common/Value")]
     public abstract class ValueNode<TValue> : Node
     {
-        [ValueOut] public ValuePort Value;
+        [ValueOut] public ValuePort<TValue> Value;
         
         protected ValueNode(TValue defaultValue = default)
         {

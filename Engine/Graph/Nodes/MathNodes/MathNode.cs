@@ -8,9 +8,9 @@ namespace RedOwl.UIX.Engine
         [FlowIn(Callback = nameof(OnEnter))] public FlowPort Enter;
         [FlowOut] public FlowPort Exit;
         
-        [ValueIn] public ValuePort Input;
+        [ValueIn] public ValuePort<TInput> Input;
 
-        [ValueOut] public ValuePort Output;
+        [ValueOut] public ValuePort<TOutput> Output;
 
         protected MathNode()
         {
@@ -35,10 +35,10 @@ namespace RedOwl.UIX.Engine
         [FlowIn(Callback = nameof(OnEnter))] public FlowPort Enter;
         [FlowOut] public FlowPort Exit;
         
-        [ValueIn] public ValuePort Left;
-        [ValueIn] public ValuePort Right;
+        [ValueIn] public ValuePort<TLeft> Left;
+        [ValueIn] public ValuePort<TRight> Right;
 
-        [ValueOut] public ValuePort Output;
+        [ValueOut] public ValuePort<TOutput> Output;
 
         protected MathNode()
         {

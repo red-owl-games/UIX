@@ -5,7 +5,7 @@ namespace RedOwl.UIX.Engine
     [Node("Flow", Path = "Flow Control")]
     public class BranchNode : Node
     {
-        [ValueIn] public ValuePort Condition;
+        [ValueIn] public ValuePort<bool> Condition;
 
         [FlowIn(Callback = nameof(OnEnter))] public FlowPort Enter;
 
@@ -21,9 +21,9 @@ namespace RedOwl.UIX.Engine
             False = new FlowPort(this);
         }
         
-        private IEnumerable OnEnter(IFlow flow)
+        private FlowPort OnEnter(IFlow flow)
         {
-            yield return flow.Get<bool>(Condition) ? True : False;
+            return flow.Get<bool>(Condition) ? True : False;
         }
     }
 }
