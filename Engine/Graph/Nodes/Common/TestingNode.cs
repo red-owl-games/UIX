@@ -19,6 +19,11 @@ namespace RedOwl.UIX.Engine
             String = new ValuePort<string>(this);
         }
         
+        public override void Definition()
+        {
+            
+        }
+        
         private IEnumerable OnEnter(IFlow flow)
         {
             Debug.Log("Enter");

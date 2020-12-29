@@ -21,22 +21,22 @@ namespace RedOwl.UIX.Engine
             switch (comparison)
             {
                 case Comparison.Equal:
-                    flow.Set(Output, Approximately(flow.Get<double>(Left), flow.Get<double>(Right)));
+                    Output.Value = Approximately(Left.Value, Right.Value);
                     break;
                 case Comparison.NotEqual:
-                    flow.Set(Output, !Approximately(flow.Get<double>(Left), flow.Get<double>(Right)));
+                    Output.Value = !Approximately(Left.Value, Right.Value);
                     break;
                 case Comparison.GreaterThan:
-                    flow.Set(Output, flow.Get<double>(Left) > flow.Get<double>(Right));
+                    Output.Value = Left.Value > Right.Value;
                     break;
                 case Comparison.GreaterThanOrEqual:
-                    flow.Set(Output, flow.Get<double>(Left) >= flow.Get<double>(Right));
+                    Output.Value = Left.Value >= Right.Value;
                     break;
                 case Comparison.LessThan:
-                    flow.Set(Output, flow.Get<double>(Left) < flow.Get<double>(Right));
+                    Output.Value = Left.Value < Right.Value;
                     break;
                 case Comparison.LessThenOrEqual:
-                    flow.Set(Output, flow.Get<double>(Left) <= flow.Get<double>(Right));
+                    Output.Value = Left.Value <= Right.Value;
                     break;
             }
         }

@@ -4,7 +4,7 @@ namespace RedOwl.UIX.Engine
     {
         protected override void Calculate(IFlow flow)
         {
-            flow.Set(Output, flow.Get<bool>(Left) && flow.Get<bool>(Right));
+            Output.Value = Left.Value && Right.Value;
         }
     }
 }

@@ -7,6 +7,7 @@ namespace RedOwl.UIX.Engine
     public interface INode
     {
         void Initialize();
+        void Definition();
         string NodeId { get; }
         string NodeTitle { get; }
         Rect NodeRect { get; set; }
@@ -104,6 +105,8 @@ namespace RedOwl.UIX.Engine
             if (IsInitialized) return;
             try
             {
+                Definition();
+                
                 // Hack to trigger initialization of ports
                 _valueInPorts = ValueInPorts;
                 _valueOutPorts = ValueOutPorts;
@@ -119,9 +122,11 @@ namespace RedOwl.UIX.Engine
                 Debug.LogWarning($"Failed to Initialize Node {GetType().FullName} | {nodeId}");
             }
         }
-        
+
+        public abstract void Definition();
+
         protected virtual void OnInitialize() {}
-        
+
         public override string ToString() => $"{nodeTitle}";
     }
 }

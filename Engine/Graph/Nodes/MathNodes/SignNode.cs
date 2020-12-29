@@ -6,7 +6,7 @@ namespace RedOwl.UIX.Engine
     {
         protected override void Calculate(IFlow flow)
         {
-            flow.Set(Output, math.sign(flow.Get<double>(Input)));
+            Output.Value = math.sign(Input.Value);
         }
     }
 }

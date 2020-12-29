@@ -46,6 +46,11 @@ namespace RedOwl.UIX.Engine
             _nodes = new List<INode>();
         }
 
+        public override void Definition()
+        {
+            
+        }
+
         protected override void OnInitialize()
         {
             foreach (var node in _nodes)

@@ -21,6 +21,11 @@ namespace RedOwl.UIX.Engine
             Output = new ValuePort<TOutput>(this);
         }
 
+        public override void Definition()
+        {
+            
+        }
+
         protected void OnEnter(IFlow flow)
         {
             Calculate(flow);
@@ -49,6 +54,11 @@ namespace RedOwl.UIX.Engine
             Right = new ValuePort<TRight>(this);
 
             Output = new ValuePort<TOutput>(this);
+        }
+        
+        public override void Definition()
+        {
+            
         }
 
         protected IFlowPort OnEnter(IFlow flow)

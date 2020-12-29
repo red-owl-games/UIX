@@ -15,7 +15,12 @@ namespace RedOwl.UIX.Engine
             Message = new ValuePort<string>(this, defaultMessage);
             Enter = new FlowPort(this);
         }
+        
+        public override void Definition()
+        {
+            
+        }
 
-        private void OnEnter(IFlow flow) => Debug.Log(flow.Get<string>(Message));
+        private void OnEnter(IFlow flow) => Debug.Log(Message.Value);
     }
 }

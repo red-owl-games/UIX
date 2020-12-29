@@ -9,5 +9,10 @@ namespace RedOwl.UIX.Engine
         {
             LateUpdate = new FlowPort(this);
         }
+        
+        public override void Definition()
+        {
+            
+        }
     }
 }

@@ -5,6 +5,9 @@ namespace RedOwl.UIX.Engine
     {
         public GraphAsset Graph;
         
-        // TODO: Generate Dynamic Ports based on GraphAsset's graph PortNodes
+        public override void Definition()
+        {
+            // TODO: Generate Dynamic Ports based on graph's PortNodes
+        }
     }
 }

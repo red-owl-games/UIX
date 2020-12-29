@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace RedOwl.UIX.Engine
 {
     public class OperationNode : MathNode<double, double, double>
@@ -17,20 +19,20 @@ namespace RedOwl.UIX.Engine
             switch (operation)
             {
                 case Operation.Add:
-                    flow.Set(Output, flow.Get<double>(Left) + flow.Get<double>(Right));
+                    Debug.Log($"Doing Calculation '{Left.Value} + {Right.Value}'");
+                    Output.Value = Left.Value + Right.Value;
                     break;
                 case Operation.Subtract:
-                    flow.Set(Output, flow.Get<double>(Left) - flow.Get<double>(Right));
+                    Output.Value = Left.Value - Right.Value;
                     break;
                 case Operation.Multiply:
-                    flow.Set(Output, flow.Get<double>(Left) * flow.Get<double>(Right));
+                    Output.Value = Left.Value * Right.Value;
                     break;
                 case Operation.Divide:
                     // TODO: protect against / by 0
-                    flow.Set(Output, flow.Get<double>(Left) / flow.Get<double>(Right));
+                    Output.Value = Left.Value / Right.Value;
                     break;
             }
-            
         }
     }
 }

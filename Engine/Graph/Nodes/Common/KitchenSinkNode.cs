@@ -131,6 +131,11 @@ namespace RedOwl.UIX.Engine
             // Unity Mathamatics
         }
         
+        public override void Definition()
+        {
+            
+        }
+        
         private IEnumerable OnEnter(IFlow flow)
         {
             yield return Start;

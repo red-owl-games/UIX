@@ -16,6 +16,11 @@ namespace RedOwl.UIX.Engine
             Exit = new FlowPort(this);
         }
         
+        public override void Definition()
+        {
+            
+        }
+        
         private IEnumerator OnEnter(IFlow flow)
         {
             int times = 0;

@@ -11,6 +11,11 @@ namespace RedOwl.UIX.Engine
         {
             Value = new ValuePort<TValue>(this, defaultValue);
         }
+        
+        public override void Definition()
+        {
+            
+        }
     }
     
     // Primatives
