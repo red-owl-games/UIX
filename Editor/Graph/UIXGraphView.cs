@@ -34,7 +34,6 @@ namespace RedOwl.UIX.Editor
             _serializedGraph = new SerializedObject(asset);
             _graph = asset.graph;
             _graph.Definition();
-            _graph.Initialize();
             _nodeViewCache = new Dictionary<string, UIXNodeView>(_graph.NodeCount);
 
             UIXEditor.Setup(this);

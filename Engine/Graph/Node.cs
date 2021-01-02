@@ -15,7 +15,6 @@ namespace RedOwl.UIX.Engine
         Dictionary<string, IValuePort> ValueInPorts { get; }
         Dictionary<string, IValuePort> ValueOutPorts { get; }
         
-        bool IsDefined { get; }
         void Definition();
     }
 
@@ -26,15 +25,12 @@ namespace RedOwl.UIX.Engine
         Dictionary<string, IFlowPort> FlowInPorts { get; }
         Dictionary<string, IFlowPort> FlowOutPorts { get; }
         
-        bool IsInitialized { get; }
-        void Initialize();
+        void Initialize(ref IFlow flow);
     }
 
     [Serializable]
     public abstract class Node : INode 
     {
-        protected static Vector2 DefaultPosition = new Vector2(0, 0);
-
 #if ODIN_INSPECTOR 
         [HideInInspector]
 #endif
@@ -66,14 +62,34 @@ namespace RedOwl.UIX.Engine
         public Dictionary<string, IValuePort> ValueInPorts { get; } = new Dictionary<string, IValuePort>();
         public Dictionary<string, IValuePort> ValueOutPorts { get; } = new Dictionary<string, IValuePort>();
 
+        // TODO: recheck that this is true
         [field: NonSerialized] // Prevents a weird editor domain reload bug where IsDefined stays true
         public bool IsDefined { get; private set; }
 
         protected Node()
         {
             bool found = UIXGraphReflector.NodeCache.Get(GetType(), out var data);
-            NodeRect = found ? new Rect(DefaultPosition, data.Size) : new Rect(DefaultPosition, new Vector2(200, 100));
+            NodeRect = new Rect(new Vector2(0, 0), found ? data.Size : new Vector2(200, 100));
             NodeTitle = found ? data.Name : "";
+        }
+        
+        private void DefineValuePorts()
+        {
+            if (!UIXGraphReflector.NodeCache.Get(GetType(), out var data)) return;
+            foreach (var valuePort in data.ValuePorts)
+            {
+                switch (valuePort.Direction)
+                {
+                    case PortDirection.Input:
+                        ValueInPorts.Add(valuePort.Name, valuePort.GetOrCreatePort(this));
+                        break;
+                    case PortDirection.Output:
+                        ValueOutPorts.Add(valuePort.Name, valuePort.GetOrCreatePort(this));
+                        break;
+                }
+
+                //Debug.Log($"{NodeTitle}Node has Value Port '{valuePort.Name} | {valuePort.Direction}'");
+            }
         }
 
         public void Definition()
@@ -94,50 +110,24 @@ namespace RedOwl.UIX.Engine
 
         internal virtual void InternalDefinition()
         {
-            bool found = UIXGraphReflector.NodeCache.Get(GetType(), out var data);
-            if (!found) return;
-            foreach (var valuePort in data.ValuePorts)
-            {
-                switch (valuePort.Direction)
-                {
-                    case PortDirection.Input:
-                        ValueInPorts.Add(valuePort.Name, valuePort.GetOrCreatePort(this));
-                        break;
-                    case PortDirection.Output:
-                        ValueOutPorts.Add(valuePort.Name, valuePort.GetOrCreatePort(this));
-                        break;
-                }
-                //Debug.Log($"{NodeTitle}Node has Value Port '{valuePort.Name} | {valuePort.Direction}'");
-            }
+            DefineValuePorts();
         }
 
         protected virtual void OnDefinition() {}
 
         public override string ToString() => $"{NodeTitle}Node";
-
-        // public static Port Port(string id = null)
-        // {
-        //     var port = new Port(id);
-        //     // TODO: Add port to proper Dictionary
-        //     return port;
-        // }
     }
 
     public abstract class FlowNode : Node, IFlowNode
     {
-        [field: NonSerialized] // Prevents a weird editor domain reload bug where IsInitialized stays true
-        public bool IsInitialized { get; private set; }
-
-        public bool IsFlowRoot { get; private set; } = false;
+        public bool IsFlowRoot => UIXGraphReflector.NodeCache.Get(GetType(), out var data) && data.IsFlowRoot;
         
         public Dictionary<string, IFlowPort> FlowInPorts { get; } = new Dictionary<string, IFlowPort>();
         public Dictionary<string, IFlowPort> FlowOutPorts { get; } = new Dictionary<string, IFlowPort>();
         
-        internal override void InternalDefinition()
+        private void DefineFlowPorts()
         {
-            base.InternalDefinition();
-            bool found = UIXGraphReflector.NodeCache.Get(GetType(), out var data);
-            if (!found) return;
+            if (!UIXGraphReflector.NodeCache.Get(GetType(), out var data)) return;
             foreach (var flowPort in data.FlowPorts)
             {
                 switch (flowPort.Direction)
@@ -152,16 +142,19 @@ namespace RedOwl.UIX.Engine
                 //Debug.Log($"{NodeTitle}Node has Flow Port '{flowPort.Name} | {flowPort.Direction}'");
             }
         }
-
-        public void Initialize()
+        
+        internal override void InternalDefinition()
         {
-            if (IsInitialized) return;
-            bool found = UIXGraphReflector.NodeCache.Get(GetType(), out var data);
-            IsFlowRoot = found ? data.IsFlowRoot : false;
+            base.InternalDefinition();
+            DefineFlowPorts();
+        }
+
+        public void Initialize(ref IFlow flow)
+        {
             try
             {
-                OnInitialize();
-                IsInitialized = true;
+                InitializeValuePorts(ref flow);
+                OnInitialize(ref flow);
             }
             catch
             {
@@ -169,7 +162,20 @@ namespace RedOwl.UIX.Engine
                 throw;
             }
         }
+
+        private void InitializeValuePorts(ref IFlow flow)
+        {
+            foreach (var valueIn in ValueInPorts.Values)
+            {
+                valueIn.Initialize(ref flow);
+            }
+
+            foreach (var valueOut in ValueOutPorts.Values)
+            {
+                valueOut.Initialize(ref flow);
+            }
+        }
         
-        protected virtual void OnInitialize() {}
+        protected virtual void OnInitialize(ref IFlow flow) {}
     }
 }

@@ -20,24 +20,9 @@ namespace RedOwl.UIX.Engine
             All = 0b_11111
         }
         
-        public GraphAsset graphAsset;
+        public GraphAsset graph;
         public Stages stage;
         
-        private IGraph Graph => graphAsset.graph;
-        
-#if ODIN_INSPECTOR
-        [Sirenix.OdinInspector.Button(Sirenix.OdinInspector.ButtonSizes.Large), Sirenix.OdinInspector.DisableInPlayMode]
-#endif
-        private void Execute()
-        {
-            if (graphAsset == null || graphAsset.graph == null) return;
-            Debug.Log($"Execute Graph '{graphAsset.name}'");
-            new Flow(Graph).Execute();
-            //StartCoroutine(WalkAsync(flow));
-            // EditorCoroutineUtility.StartCoroutineOwnerless(WalkAsync(flow));
-            //while(WalkAsync(flow).MoveNext()){}
-        }
-
         private IFlow _awakeFlow;
         private IFlow _startFlow;
         private IFlow _updateFlow;
@@ -46,21 +31,18 @@ namespace RedOwl.UIX.Engine
         
         private void Awake()
         {
-            _awakeFlow = new Flow<StartNode>(Graph);
-            _startFlow = new Flow<StartNode>(Graph);
-            _updateFlow = new Flow<UpdateNode>(Graph);
-            _fixedUpdateFlow = new Flow<FixedUpdateNode>(Graph);
-            _lateUpdateFlow = new Flow<LateUpdateNode>(Graph);
+            _awakeFlow = new Flow<StartNode>(graph.graph);
+            _startFlow = new Flow<StartNode>(graph.graph);
+            _updateFlow = new Flow<UpdateNode>(graph.graph);
+            _fixedUpdateFlow = new Flow<FixedUpdateNode>(graph.graph);
+            _lateUpdateFlow = new Flow<LateUpdateNode>(graph.graph);
             
             if (stage.HasFlag(Stages.Awake)) _awakeFlow.Execute();
         }
 
         private void Start()
         {
-            if (stage.HasFlag(Stages.Start)) 
-            {
-                _startFlow.Execute();
-            }
+            if (stage.HasFlag(Stages.Start)) _startFlow.Execute();
         }
 
         private void Update()

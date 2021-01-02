@@ -14,15 +14,15 @@ namespace RedOwl.UIX.Engine
     [Preserve]
     public class FlowPort : Port, IFlowPort
     {
-        private static Type _voidType = typeof(void);
-        private static Type _flowType = typeof(IFlow);
-        private static Type _flowPortType = typeof(IFlowPort);
-        private static Type _enumeratorType = typeof(IEnumerator);
-        private static Type _simpleCallbackType = typeof(Action<IFlow>);
-        private static Type _syncCallbackType = typeof(Func<IFlow, IFlowPort>);
-        private static Type _asyncCallbackType = typeof(Func<IFlow, IEnumerator>);
+        private static readonly Type VoidType = typeof(void);
+        private static readonly Type FlowType = typeof(IFlow);
+        private static readonly Type FlowPortType = typeof(IFlowPort);
+        private static readonly Type EnumeratorType = typeof(IEnumerator);
+        private static readonly Type SimpleCallbackType = typeof(Action<IFlow>);
+        private static readonly Type SyncCallbackType = typeof(Func<IFlow, IFlowPort>);
+        private static readonly Type AsyncCallbackType = typeof(Func<IFlow, IEnumerator>);
         
-        public Type ValueType => _flowPortType;
+        public Type ValueType => FlowPortType;
 
         private bool _hasCallback;
         private Action<IFlow> _simpleCallback;
@@ -47,25 +47,25 @@ namespace RedOwl.UIX.Engine
             }
 
             var paramType = parameters[0].ParameterType;
-            if (paramType != _flowType)
+            if (paramType != FlowType)
             {
                 Debug.LogWarning($"FlowPort Callback for '{node.NodeTitle}.{settings.Callback.Name}' has 1 parameter that takes type '{paramType}'.  Can only accept 1 parameter of type 'IFlow'");
                 return;
             }
             _hasCallback = false;
-            if (_voidType.IsAssignableFrom(settings.Callback.ReturnType))
+            if (VoidType.IsAssignableFrom(settings.Callback.ReturnType))
             {
-                _simpleCallback = (Action<IFlow>)settings.Callback.CreateDelegate(_simpleCallbackType, node);
+                _simpleCallback = (Action<IFlow>)settings.Callback.CreateDelegate(SimpleCallbackType, node);
                 _hasCallback = true;
             }
-            if (_flowPortType.IsAssignableFrom(settings.Callback.ReturnType))
+            if (FlowPortType.IsAssignableFrom(settings.Callback.ReturnType))
             {
-                _syncCallback = (Func<IFlow, IFlowPort>)settings.Callback.CreateDelegate(_syncCallbackType, node);
+                _syncCallback = (Func<IFlow, IFlowPort>)settings.Callback.CreateDelegate(SyncCallbackType, node);
                 _hasCallback = true;
             }
-            if (_enumeratorType.IsAssignableFrom(settings.Callback.ReturnType))
+            if (EnumeratorType.IsAssignableFrom(settings.Callback.ReturnType))
             {
-                _asyncCallback = (Func<IFlow, IEnumerator>)settings.Callback.CreateDelegate(_asyncCallbackType, node);
+                _asyncCallback = (Func<IFlow, IEnumerator>)settings.Callback.CreateDelegate(AsyncCallbackType, node);
                 _hasCallback = true;
             }
             if (!_hasCallback) Debug.LogWarning($"FlowPort Callback for '{node.NodeTitle}.{settings.Callback.Name}' did not have one of the following method signatures [Action<IFlow>, Func<IFlow, IFlowPort>, Func<IFlow, IEnumerator>]");

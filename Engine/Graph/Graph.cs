@@ -1,11 +1,5 @@
-// using System;
-// using System.Collections.Generic;
-// using UnityEngine;
-//
-
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
@@ -70,11 +64,11 @@ namespace RedOwl.UIX.Engine
             }
         }
 
-        protected override void OnInitialize()
+        protected override void OnInitialize(ref IFlow flow)
         {
             foreach (var node in _nodes)
             {
-                if (node is IFlowNode flowNode) flowNode.Initialize();
+                if (node is IFlowNode flowNode) flowNode.Initialize(ref flow);
             }
         }
 
@@ -84,7 +78,7 @@ namespace RedOwl.UIX.Engine
             {
                 if (node.NodeId == id) return node;
             }
-
+            Debug.Log($"Cannot Find Node '{id}' in graph");
             return null;
         }
         
@@ -113,7 +107,6 @@ namespace RedOwl.UIX.Engine
                 if (node is IFlowNode flowNode)
                 {
                     flowNode.Definition();
-                    if (IsInitialized) flowNode.Initialize();
                 }
                 else
                 {

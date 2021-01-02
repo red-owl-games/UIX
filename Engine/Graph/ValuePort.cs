@@ -1,36 +1,49 @@
 using System;
+using UnityEngine;
 using UnityEngine.Scripting;
 
 namespace RedOwl.UIX.Engine
 {
     public interface IValuePort : IPort
     {
-        object WeakValue { get;  }
+        object DefaultValue { get; }
+        object WeakValue { get; }
         void Definition(INode node, ValuePortSettings settings);
-        void Set(IFlow flow, IPort target);
+        void Initialize(ref IFlow flow);
     }
 
     [Preserve]
     public class ValuePort<T> : Port, IValuePort
     {
-        public object WeakValue { get; private set; }
+        private IFlow currentFlow;
+        public object DefaultValue { get; private set; }
+        public object WeakValue => currentFlow != null && currentFlow.ContainsKey(Id) ? currentFlow.Get<object>(Id) : DefaultValue;
         
-        // TODO: this should get data from the current "flow" otherwise return the "defaultValue"
         public T Value
         {
-            get => (T)WeakValue;
-            set => WeakValue = value;
+            get => currentFlow != null && currentFlow.ContainsKey(Id) ? currentFlow.Get<T>(Id) : (T) DefaultValue;
+            set
+            {
+                if (currentFlow == null)
+                {
+                    DefaultValue = value;
+                }
+                else
+                {
+                    currentFlow.Set(Id, value);
+                }
+            }
         }
 
         public Type ValueType { get; protected set; }
         
-        [Preserve]
-        public ValuePort() {}
-
         public ValuePort(T defaultValue)
         {
             Value = defaultValue;
         }
+        
+        [Preserve]
+        public ValuePort() : this(default) {}
         
         public void Definition(INode node, ValuePortSettings settings)
         {
@@ -39,12 +52,12 @@ namespace RedOwl.UIX.Engine
             Direction = settings.Direction;
             Capacity = settings.Capacity;
             ValueType = typeof(T);
-
         }
-        
-        public void Set(IFlow flow, IPort target)
+
+        public void Initialize(ref IFlow flow)
         {
-            flow.Set(target, WeakValue);
+            currentFlow = flow;
+            currentFlow.Set(Id, (T)DefaultValue);
         }
 
         public static implicit operator T(ValuePort<T> self) => self.Value;

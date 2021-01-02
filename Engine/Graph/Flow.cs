@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -8,14 +8,18 @@ namespace RedOwl.UIX.Engine
     {
         IGraph Graph { get; }
         IFlowNode[] RootNodes { get; }
-        T Get<T>(IPort port);
-        bool Get<T>(IPort port, out T output);
-        void Set(IPort port, object value);
-
+        bool ContainsKey(PortId id);
+        bool ContainsKey(string key);
+        T Get<T>(PortId id);
+        T Get<T>(string key);
+        void Set<T>(PortId id, T value);
+        void Set<T>(string key, T value);
+        void Clear();
         void Execute();
+        
     }
 
-    public class Flow : BetterDictionary<PortId, object>, IFlow
+    public class Flow : BetterDictionary<string, object>, IFlow
     {
         public IGraph Graph { get; }
         public IFlowNode[] RootNodes { get; }
@@ -23,130 +27,105 @@ namespace RedOwl.UIX.Engine
         public Flow(IGraph graph, IFlowNode[] nodes = null)
         {
             Graph = graph;
-            RootNodes = nodes ?? graph.RootNodes.ToArray();
+            RootNodes = nodes ?? new List<IFlowNode>(graph.RootNodes).ToArray();
         }
+
+        private string FormatKey(PortId id) => $"{id.Node}.{id.Port}";
+
+        public bool ContainsKey(PortId id) => ContainsKey(FormatKey(id));
         
-        public T Get<T>(IPort port)
-        {
-            // TODO: use Converter.Convert ?
-            if (TryGetValue(port.Id, out var item))
-            {
-                try
-                {
-                    return (T)item;
-                }
-                catch(InvalidCastException)
-                {
-                    Debug.Log($"Unable To Cast to {typeof(T)}");
-                    return default;
-                }
-            }
-            return default;
-        }
+        public T Get<T>(PortId id) => Get<T>(FormatKey(id));
+        public T Get<T>(string key) => (T) this[key];
 
-        public bool Get<T>(IPort port, out T output)
+        public void Set<T>(PortId id, T value) => Set(FormatKey(id), value);
+        
+        public void Set<T>(string key, T value)
         {
-            // TODO: use Converter.Convert ?
-            if (TryGetValue(port.Id, out var item))
+            if (ContainsKey(key))
             {
-                output = (T) item;
-                return true;
-            }
-            output = default;
-            return false;
-        }
-
-        public void Set(IPort port, object value)
-        {
-            // TODO: use Converter.Convert ?
-            if (ContainsKey(port.Id))
-            {
-                this[port.Id] = value;
+                this[key] = value;
             }
             else
             {
-                Add(port.Id, value);
+                Add(key, value);
             }
         }
+
+        public void Execute() => Execute(this);
+
+        #region Static
         
-        public void Execute()
+        public static void Execute(IFlow flow)
         {
-            Graph.Initialize();
-            Clear();
+            flow.Graph.Initialize(ref flow);
             // TODO: Remove Timer
             using(new Timer("Flow.Execution"))
             {
-                foreach (var node in RootNodes)
+                foreach (var node in flow.RootNodes)
                 {
-                    //Debug.Log($"Starting Root Node Walk from '[{node}]'");
-                    WalkFlowPorts(this, node);
+                    Debug.Log($"Starting Root Node Walk from '[{node}]'");
+                    flow.Clear();
+                    WalkFlowPorts(ref flow, node);
                 }
             }
         }
 
-        // public static void ExecutePort(IFlow flow, IValuePort port)
-        // {
-        //     // TODO: This might need to be a custom while loop executor to handle supporting Yield Instructions
-        //     while (port.Execute(flow).MoveNext()) {}
-        // }
-        
-        public static void ExecutePort(IFlow flow, IFlowPort port)
+        public static void ExecutePort(ref IFlow flow, IFlowPort port)
         {
             // TODO: This might need to be a custom while loop executor to handle supporting Yield Instructions
             while (port.Execute(flow).MoveNext()) {}
         }
         
-        public static void WalkValuePorts(IFlow flow, INode node)
+        public static void WalkValuePorts(ref IFlow flow, INode node)
         {
             // Should only ever be called on "Nodes" that are about to have its FlowIn port executed
             // Recursively walks back up the value input ports connections to make sure values are "set" into the flow
             foreach (var port in node.ValueInPorts.Values)
             {
-                WalkValueIn(flow, node, port);
+                WalkValueIn(ref flow, node, port);
             }
         }
 
-        public static void WalkValueIn(IFlow flow, INode node, IValuePort input)
+        public static void WalkValueIn(ref IFlow flow, INode node, IValuePort input)
         {
             // Debug.Log($"Walking ValueIn '[{node}]{input}'");
-            // ExecutePort(flow, input);
             foreach (var connection in flow.Graph.ValueInConnections.SafeGet(input.Id))
             {
                 var nextNode = flow.Graph.GetNode(connection.Node); //  TODO: Needs saftey check?
                 var output = nextNode.ValueOutPorts[connection.Port]; // TODO: Needs saftey check?
                 // Debug.Log($"Pulled Value for '[{node}]{input}' from '[{nextNode}]{output}'");
-                output.Set(flow, input);
+                flow.Set(input.Id, output.WeakValue);
             }
         }
 
-        public static void WalkFlowPorts(IFlow flow, IFlowNode node)
+        public static void WalkFlowPorts(ref IFlow flow, IFlowNode node)
         {
             // Should only ever be called on "Root Nodes" or nodes that "fork" the flow
             // This will walk recursive down the nodes flow out ports
             foreach (var port in node.FlowOutPorts.Values)
             {
-                WalkFlowOut(flow, node, port);
+                WalkFlowOut(ref flow, node, port);
             }
         }
 
-        public static void WalkFlowOut(IFlow flow, IFlowNode node, IFlowPort output)
+        public static void WalkFlowOut(ref IFlow flow, IFlowNode node, IFlowPort output)
         {
             //Debug.Log($"Walking FlowOut '[{node}]{output}'");
-            if (node.IsFlowRoot) WalkValuePorts(flow, node);
-            ExecutePort(flow, output);
+            if (node.IsFlowRoot) WalkValuePorts(ref flow, node);
+            ExecutePort(ref flow, output);
             foreach (var input in flow.Graph.FlowOutConnections.SafeGet(output.Id))
             {
-                var nextNode = (IFlowNode)flow.Graph.GetNode(input.Node); //  TODO: Needs saftey check?
-                var nextPort = nextNode.FlowInPorts[input.Port]; // TODO: Needs saftey check?
+                var nextNode = (IFlowNode)flow.Graph.GetNode(input.Node);
+                var nextPort = nextNode?.FlowInPorts[input.Port];
                 //Debug.Log($"Traversing Towards '[{nextNode}]{nextPort}'");
-                WalkFlowIn(flow, nextNode, nextPort);
+                if (nextNode != null && nextPort != null) WalkFlowIn(ref flow, nextNode, nextPort);
             }
         }
 
-        public static void WalkFlowIn(IFlow flow, IFlowNode node, IFlowPort input)
+        public static void WalkFlowIn(ref IFlow flow, IFlowNode node, IFlowPort input)
         {
             //Debug.Log($"Walking FlowIn '[{node}]{input}'");
-            WalkValuePorts(flow, node);
+            WalkValuePorts(ref flow, node);
             var enumerator = input.Execute(flow);
             while (enumerator.MoveNext())
             {
@@ -154,10 +133,12 @@ namespace RedOwl.UIX.Engine
                 if (enumerator.Current is IFlowPort nextPort) // TODO: saftey check for being given a FlowOut port?
                 {
                     //Debug.Log($"Traversing Towards '[{node}]{nextPort}'");
-                    WalkFlowOut(flow, node, nextPort);
+                    WalkFlowOut(ref flow, node, nextPort);
                 }
             }
         }
+        
+        #endregion
     }
 
     public class Flow<T> : Flow where T : IFlowNode

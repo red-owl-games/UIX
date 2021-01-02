@@ -33,14 +33,9 @@ namespace RedOwl.UIX.Engine
             var port = (IValuePort)Info.GetValue(node);
             if (port == null)
             {
-                // Debug.Log($"Creating Valueport: '{node}.{Name}'");
                 port = (IValuePort)Activator.CreateInstance(Info.FieldType);
                 Info.SetValue(node, port);
             }
-            // else
-            // {
-            //     Debug.Log($"Found Existing Valueport: '{node}.{Name}'");
-            // }
             port.Definition(node, this);
             return port;
         }
@@ -120,7 +115,6 @@ namespace RedOwl.UIX.Engine
         private Dictionary<ContextMenu, MethodInfo> _contextMethods;
         
         public IReadOnlyDictionary<ContextMenu, MethodInfo> ContextMethods => _contextMethods;
-        
 
         public bool ShouldCache(Type type)
         {
@@ -151,7 +145,7 @@ namespace RedOwl.UIX.Engine
         private void ExtractValuePorts(Type type)
         {
             ValuePorts = new List<ValuePortSettings>();
-            // This OrderBy sorts the fields by the order they are defined in the code and subclass fields first
+            // This OrderBy sorts the fields by the order they are defined in the code with subclass fields first
             var infos = type.GetFields(BindingFlags).OrderBy(field => field.MetadataToken);
             foreach (var info in infos)
             {
@@ -169,13 +163,12 @@ namespace RedOwl.UIX.Engine
                     }
                 }
             }
-            //ValuePorts.Sort((a,b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         }
 
         private void ExtractFlowPorts(Type type)
         {
             FlowPorts = new List<FlowPortSettings>();
-            // This OrderBy sorts the fields by the order they are defined in the code and subclass fields first
+            // This OrderBy sorts the fields by the order they are defined in the code with subclass fields first
             var methodInfos = type.GetMethodTable(BindingFlags);
             methodInfos.Add(string.Empty, null);
             var fieldInfos = type.GetFields(BindingFlags).OrderBy(field => field.MetadataToken);
@@ -184,6 +177,7 @@ namespace RedOwl.UIX.Engine
                 var attrs = fieldInfo.GetCustomAttributes(true);
                 foreach (var attr in attrs)
                 {
+                    if (!(attr is IFlowPortAttribute)) continue;
                     switch (attr)
                     {
                         case FlowInAttribute input:
@@ -195,7 +189,6 @@ namespace RedOwl.UIX.Engine
                     }
                 }
             }
-            //FlowPorts.Sort((a,b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
         }
         
         private void ExtractContextMethods(Type type)

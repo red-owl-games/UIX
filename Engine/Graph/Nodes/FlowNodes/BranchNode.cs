@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace RedOwl.UIX.Engine
 {
     [Node("Flow", Path = "Flow Control")]

@@ -14,11 +14,6 @@ namespace RedOwl.UIX.Engine
         [ValueIn] public ValuePort<float> Delay = 0.2f;
         [ValueOut] public ValuePort<string> Current = "";
 
-        protected override void OnDefinition()
-        {
-            Debug.Log($"Value For Text = '{Text.Value}'");
-        }
-
         private IEnumerator WriteText(IFlow flow)
         {
             string startingText = Text.Value;

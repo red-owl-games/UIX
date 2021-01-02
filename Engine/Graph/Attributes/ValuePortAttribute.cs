@@ -16,12 +16,6 @@ namespace RedOwl.UIX.Engine
         public string Name { get; set; } = null;
         public PortDirection Direction => PortDirection.Input;
         public PortCapacity Capacity { get; set; } = PortCapacity.Multi;
-        
-        public ValueInAttribute() {}
-        public ValueInAttribute(object defaultValue)
-        {
-            
-        }
     }
     
     [AttributeUsage(AttributeTargets.Field)]
@@ -30,11 +24,5 @@ namespace RedOwl.UIX.Engine
         public string Name { get; set; } = null;
         public PortDirection Direction => PortDirection.Output;
         public PortCapacity Capacity { get; set; } = PortCapacity.Multi;
-        
-        public ValueOutAttribute() {}
-        public ValueOutAttribute(object defaultValue)
-        {
-            
-        }
     }
 }
