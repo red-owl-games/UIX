@@ -1,10 +1,11 @@
 using System;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace RedOwl.UIX.Engine
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public sealed class NodeAttribute : Attribute
+    public sealed class NodeAttribute : PreserveAttribute
     {
         /// <summary>
         /// Display name of the node.
@@ -26,7 +27,7 @@ namespace RedOwl.UIX.Engine
         
         public bool Moveable { get; set; } = true;
         
-        public bool IsRootNode { get; set; } = false;
+        public bool IsFlowRoot { get; set; } = false;
         
         public Vector2 Size { get; set; } = new Vector2(200, 100);
         

@@ -31,12 +31,6 @@ namespace RedOwl.UIX.Engine
         PortCapacity Capacity { get; }
         
         Type ValueType { get; }
-        
-        List<PortId> Connections { get; }
-
-        void Connect(PortId output);
-
-        void Disconnect(PortId output);
     }
 
     [Serializable]
@@ -80,16 +74,11 @@ namespace RedOwl.UIX.Engine
         }
     }
 
-    [Serializable]
     public abstract class Port
     {
-        [SerializeField]
-        protected PortId id;
-
-        public PortId Id => id;
+        public PortId Id { get; internal set; }
         
-        // public string NodeId => id.Node;
-        public string PortId => id.Port;
+        public INode Node { get; internal set; }
         
         public string Name { get; protected set; }
 
@@ -97,36 +86,6 @@ namespace RedOwl.UIX.Engine
          
         public PortCapacity Capacity { get; protected set; }
         
-
-        [SerializeField]
-        private List<PortId> connections;
-
-        public List<PortId> Connections => connections;
-        
-        protected Port(INode node)
-        {
-            id = new PortId(node.NodeId, Guid.NewGuid().ToString());
-            connections = new List<PortId>();
-        }
-
-        protected Port(IPort port)
-        {
-            id = port.Id;
-            connections = port.Connections;
-        }
-        
-        public void Connect(PortId output) => connections.Add(output);
-        public void Disconnect(PortId output) => connections.Remove(output);
-
         public override string ToString() => $"[{Name} | {Direction} | {Capacity}]";
-    }
-
-    public abstract class Port<T> : Port where T : IPortReflectionData
-    {
-        protected Port(INode node) : base(node) {}
-        
-        protected Port(IPort port) : base(port) {}
-
-        public abstract void Initialize<TNode>(TNode node, UIXNodeReflection nodeData , T portData) where TNode : INode;
     }
 }

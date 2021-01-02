@@ -53,7 +53,7 @@ namespace RedOwl.UIX.Editor
 
             CreateBody(node);
             CreateFlowPortContainers();
-            CreateFlowPorts(node);
+            if (node is IFlowNode flowNode) CreateFlowPorts(flowNode);
             AttachFlowPortContainers();
             CreateValuePorts(node);
             RefreshExpandedState();
@@ -95,7 +95,7 @@ namespace RedOwl.UIX.Editor
             FlowOutPortContainer.AddToClassList("FlowOutPorts");
         }
 
-        private void CreateFlowPorts(INode node)
+        private void CreateFlowPorts(IFlowNode node)
         {
             foreach (var flowPort in node.FlowInPorts.Values)
             {
@@ -116,33 +116,6 @@ namespace RedOwl.UIX.Editor
 
         private Direction ConvertDirection(PortDirection value) => value == PortDirection.Input ? Direction.Input : Direction.Output;
         private PortView.Capacity ConvertCapacity(PortCapacity value) => value == PortCapacity.Single ? PortView.Capacity.Single : PortView.Capacity.Multi;
-
-        public IEnumerable<Edge> CreateConnections(Dictionary<string, UIXNodeView> cache)
-        {
-            foreach (var valuePort in Model.ValueInPorts.Values)
-            {
-                foreach (var connection in valuePort.Connections)
-                {
-                    if (!cache.TryGetValue(connection.Node, out var output)) continue;
-                    var inputPort = inputContainer.Q<PortView>(valuePort.Id.Port);
-                    var outputPort = output.outputContainer.Q<PortView>(connection.Port);
-                    if (inputPort != null && outputPort != null) 
-                        yield return outputPort.ConnectTo(inputPort);
-                }
-            }
-
-            foreach (var flowPort in Model.FlowOutPorts.Values)
-            {
-                foreach (var connection in flowPort.Connections)
-                {
-                    if (!cache.TryGetValue(connection.Node, out var inputNode)) continue;
-                    var inputPort = inputNode.FlowInPortContainer.Q<PortView>(connection.Port);
-                    var outputPort = FlowOutPortContainer.Q<PortView>(flowPort.Id.Port);
-                    if (inputPort != null && outputPort != null) 
-                        yield return outputPort.ConnectTo(inputPort);
-                }
-            }
-        }
     }
     
     public static class NodeViewExtensions

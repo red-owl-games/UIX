@@ -1,20 +1,27 @@
+using System;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
+    // TODO: Have a bool when True it will expose this valueNode as a port?  What about input vs output?
+
+    [Serializable]
     [Node("Common", Path = "Common/Value")]
     public abstract class ValueNode<TValue> : Node
     {
         [ValueOut] public ValuePort<TValue> Value;
-        
+
+        [SerializeField]
+        private TValue defaultValue;
         protected ValueNode(TValue defaultValue = default)
         {
-            Value = new ValuePort<TValue>(this, defaultValue);
+            this.defaultValue = defaultValue;
         }
         
-        public override void Definition()
+        protected override void OnDefinition()
         {
-            
+            Value = defaultValue;
+            base.OnDefinition();
         }
     }
     

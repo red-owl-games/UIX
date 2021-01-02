@@ -2,16 +2,10 @@ using System.Collections;
 
 namespace RedOwl.UIX.Engine
 {
-    public abstract class StateNode : Node
+    public abstract class StateNode : FlowNode
     {
-        [FlowIn(Callback=nameof(HandleEnter))] public FlowPort Enter;
-        [FlowOut(Callback=nameof(OnExit))] public FlowPort Exit;
-
-        protected StateNode()
-        {
-            Enter = new FlowPort(this);
-            Exit = new FlowPort(this);
-        }
+        [FlowIn(nameof(HandleEnter))] public FlowPort Enter;
+        [FlowOut(nameof(OnExit))] public FlowPort Exit;
 
         protected IEnumerator HandleEnter(IFlow flow)
         {

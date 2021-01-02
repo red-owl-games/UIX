@@ -1,35 +1,24 @@
-// using System.Collections;
-//
-// namespace RedOwl.UIX.Engine
-// {
-//     [Node("Flow", Path = "Flow Control")]
-//     public class WhileNode : Node
-//     {
-//         [ValueIn] public ValuePort Condition;
-//         
-//
-//         [FlowIn] public FlowPort Enter;
-//         [FlowOut] private FlowPort True;
-//         [FlowOut] private FlowPort Exit;
-//
-//         public WhileNode()
-//         {
-//             Condition = new ValuePort<bool>(this, true);
-//
-//             Enter = new FlowPort(this, nameof(OnEnter));
-//
-//             True = new FlowPort(this);
-//             Exit = new FlowPort(this);
-//         }
-//         
-//         private IEnumerable OnEnter(Flow flow)
-//         {
-//             while (flow.Get<bool>(Condition))
-//             {
-//                 yield return True;
-//             }
-//
-//             yield return Exit;
-//         }
-//     }
-// }
+using System.Collections;
+
+namespace RedOwl.UIX.Engine
+{
+    [Node("Flow", Path = "Flow Control")]
+    public class WhileNode : FlowNode
+    {
+        [FlowIn(nameof(OnEnter))] public FlowPort Enter;
+        [FlowOut] public FlowPort True;
+        [FlowOut] public FlowPort Exit;
+        
+        [ValueIn] public ValuePort<bool> Condition = true;
+        
+        private IEnumerator OnEnter(IFlow flow)
+        {
+            while (Condition.Value)
+            {
+                yield return True;
+            }
+
+            yield return Exit;
+        }
+    }
+}

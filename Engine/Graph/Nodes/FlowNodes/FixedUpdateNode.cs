@@ -1,18 +1,8 @@
 namespace RedOwl.UIX.Engine
 {
-    [Node("Flow", Path = "Flow Control", IsRootNode = true)]
-    public class FixedUpdateNode : Node
+    [Node("Flow", Path = "Flow Control", IsFlowRoot = true)]
+    public class FixedUpdateNode : FlowNode
     {
         [FlowOut] public FlowPort FixedUpdate;
-
-        public FixedUpdateNode()
-        {
-            FixedUpdate = new FlowPort(this);
-        }
-        
-        public override void Definition()
-        {
-            
-        }
     }
 }

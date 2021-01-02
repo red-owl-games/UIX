@@ -94,6 +94,9 @@ namespace RedOwl.UIX.Editor
             //
             var saveBtn = new Button(_view.SaveAsset) {text = "Save"};
             _toolbar.Add(saveBtn);
+            
+            var executeBtn = new Button(Execute) {text = "Execute"};
+            _toolbar.Add(executeBtn);
             //
             // var loadBtn = new Button(() =>
             // {
@@ -104,6 +107,11 @@ namespace RedOwl.UIX.Editor
             // toolbar.Add(loadBtn);
             
             rootVisualElement.Add(_toolbar);
+        }
+
+        private void Execute()
+        {
+            if (_lastAsset.graph != null) new Flow(_lastAsset.graph).Execute();
         }
     }
 }

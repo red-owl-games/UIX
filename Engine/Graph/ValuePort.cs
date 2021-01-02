@@ -1,61 +1,53 @@
 using System;
-using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace RedOwl.UIX.Engine
 {
     public interface IValuePort : IPort
     {
-        object Current { get;  }
+        object WeakValue { get;  }
+        void Definition(INode node, ValuePortSettings settings);
         void Set(IFlow flow, IPort target);
     }
-    
-    [Serializable]
-    public class ValuePort<T> : Port<ValuePortSettings>, IValuePort
-    {
-        [SerializeField] protected BetterType valueType;
-        
-        [SerializeField]
-        protected T value;
 
+    [Preserve]
+    public class ValuePort<T> : Port, IValuePort
+    {
+        public object WeakValue { get; private set; }
+        
+        // TODO: this should get data from the current "flow" otherwise return the "defaultValue"
         public T Value
         {
-            get => value;
-            set => this.value = value;
+            get => (T)WeakValue;
+            set => WeakValue = value;
         }
 
-        public object Current => value;
+        public Type ValueType { get; protected set; }
+        
+        [Preserve]
+        public ValuePort() {}
 
-        public Type ValueType => valueType;
-
-        public ValuePort(INode node, T defaultValue = default) : base(node)
+        public ValuePort(T defaultValue)
         {
-            value = defaultValue;
-            valueType = typeof(T);
+            Value = defaultValue;
         }
         
-        public ValuePort(IValuePort port) : base(port)
+        public void Definition(INode node, ValuePortSettings settings)
         {
-            value = (T)port.Current;
-            valueType = port.ValueType;
+            Id = new PortId(node.NodeId, settings.Name);
+            Name = settings.Name;
+            Direction = settings.Direction;
+            Capacity = settings.Capacity;
+            ValueType = typeof(T);
+
         }
         
-        public override void Initialize<TNode>(TNode node, UIXNodeReflection nodeData , ValuePortSettings portData)
-        {
-            Name = portData.Name;
-            Direction = portData.Direction;
-            Capacity = portData.Capacity;
-        }
-
         public void Set(IFlow flow, IPort target)
         {
-            flow.Set(target, value);
+            flow.Set(target, WeakValue);
         }
 
-        public static implicit operator T(ValuePort<T> self) => self.value;
-    }
-    
-    internal sealed class ValuePort : ValuePort<object>
-    {
-        public ValuePort(IValuePort port) : base(port) {}
+        public static implicit operator T(ValuePort<T> self) => self.Value;
+        public static implicit operator ValuePort<T>(T self) => new ValuePort<T>(self);
     }
 }

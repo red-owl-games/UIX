@@ -2,19 +2,9 @@ using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
-    [Node("Flow", Path = "Flow Control", Deletable = false, Moveable = false, IsRootNode = true)]
-    public class StartNode : Node
+    [Node("Flow", Path = "Flow Control", Deletable = false, Moveable = false, IsFlowRoot = true)]
+    public class StartNode : FlowNode
     {
         [FlowOut] public FlowPort Start;
-        
-        public StartNode()
-        {
-            Start = new FlowPort(this);
-        }
-        
-        public override void Definition()
-        {
-            
-        }
     }
 }

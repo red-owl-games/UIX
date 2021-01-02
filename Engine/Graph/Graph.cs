@@ -4,17 +4,17 @@
 //
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using NUnit.Framework;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
 {
-    public interface IGraph : INode
+    public interface IGraph : IFlowNode
     {
         IEnumerable<INode> Nodes { get; }
         int NodeCount { get; }
+        IEnumerable<IFlowNode> RootNodes { get; }
         INode GetNode(string id);
         IEnumerable<T> GetNodes<T>() where T : INode;
         IEnumerable<INode> GetNodes(Type type);
@@ -22,40 +22,59 @@ namespace RedOwl.UIX.Engine
         bool Get(string id, out INode node);
         void Remove<T>(T node) where T : INode;
 
+        ConnectionsGraph ValueInConnections { get; }
+        ConnectionsGraph FlowOutConnections { get; }
         void Connect(IPort output, IPort input);
         void Disconnect(IPort output, IPort input);
-
-        // IValuePort GetValuePort(PortId id, PortDirection direction);
-        // IFlowPort GetFlowPort(PortId id, PortDirection direction);
-        
     }
 
     [Graph]
     [Node("Common", Name = "SubGraph", Path = "Common")]
-    public class Graph : Node, IGraph
+    public class Graph : FlowNode, IGraph
     {
         [SerializeReference] 
-        private List<INode> _nodes;
+        private List<INode> _nodes = new List<INode>();
 
         public IEnumerable<INode> Nodes => _nodes;
 
-        public int NodeCount => _nodes.Count;
-
-        public Graph()
+        public IEnumerable<IFlowNode> RootNodes
         {
-            _nodes = new List<INode>();
+            get
+            {
+                foreach (var node in _nodes)
+                {
+                    if (node is IFlowNode flowNode && flowNode.IsFlowRoot) yield return flowNode;
+                }
+            }
         }
 
-        public override void Definition()
+        public int NodeCount => _nodes.Count;
+        
+        [SerializeField]
+        private ConnectionsGraph valueInConnections = new ConnectionsGraph();
+
+        public ConnectionsGraph ValueInConnections => valueInConnections;
+        
+        [SerializeField]
+        private ConnectionsGraph flowOutConnections = new ConnectionsGraph();
+
+        public ConnectionsGraph FlowOutConnections => flowOutConnections;
+
+        protected override void OnDefinition()
         {
-            
+            base.OnDefinition();
+            // TODO: Generate Dynamic Ports based on graph's PortNodes
+            foreach (var node in _nodes)
+            {
+                node.Definition();
+            }
         }
 
         protected override void OnInitialize()
         {
             foreach (var node in _nodes)
             {
-                node.Initialize();
+                if (node is IFlowNode flowNode) flowNode.Initialize();
             }
         }
 
@@ -89,7 +108,19 @@ namespace RedOwl.UIX.Engine
         public T Add<T>(T node) where T : INode
         {
             _nodes.Add(node);
-            if (IsInitialized) node.Initialize();
+            if (IsDefined)
+            {
+                if (node is IFlowNode flowNode)
+                {
+                    flowNode.Definition();
+                    if (IsInitialized) flowNode.Initialize();
+                }
+                else
+                {
+                    node.Definition();
+                }
+            }
+            
             return node;
         }
 
@@ -108,7 +139,7 @@ namespace RedOwl.UIX.Engine
 
         public void Remove<T>(T node) where T : INode
         {
-            // TODO: Make sure to remove connections
+            // TODO: If _nodes was a dictionary this would be easier
             for (int i = _nodes.Count - 1; i >= 0; i--)
             {
                 var n = _nodes[i];
@@ -123,37 +154,18 @@ namespace RedOwl.UIX.Engine
 
         private void CleanupFlowPortConnections(INode target)
         {
-            foreach (var node in _nodes)
+            if (!(target is IFlowNode targetFlowNode)) return;
+            foreach (var port in targetFlowNode.FlowOutPorts.Values)
             {
-                if (node.NodeId == target.NodeId) continue;
-                foreach (var output in node.FlowOutPorts.Values)
-                {
-                    foreach (var input in output.Connections)
-                    {
-                        if (target.FlowInPorts.TryGetValue(output.Id.Port, out var _))
-                        {
-                            output.Disconnect(input);
-                        }
-                    }
-                }
+                FlowOutConnections.Remove(port.Id);
             }
         }
 
         private void CleanupValuePortConnections(INode target)
         {
-            foreach (var node in _nodes)
+            foreach (var port in target.ValueInPorts.Values)
             {
-                if (node.NodeId == target.NodeId) continue;
-                foreach (var input in node.ValueInPorts.Values)
-                {
-                    foreach (var output in input.Connections)
-                    {
-                        if (target.ValueOutPorts.TryGetValue(output.Port, out var _))
-                        {
-                            input.Disconnect(output);
-                        }
-                    }
-                }
+                ValueInConnections.Remove(port.Id);
             }
         }
 
@@ -163,45 +175,17 @@ namespace RedOwl.UIX.Engine
         {
             // TODO: if we can figure out what node each port came from we can stop storing the node ID with the port
             if (input is IValuePort valueIn && output is IValuePort valueOut)
-                valueIn.Connect(valueOut.Id);
+                valueInConnections.Connect(valueIn.Id, valueOut.Id);
             if (input is IFlowPort flowIn && output is IFlowPort flowOut) 
-                flowOut.Connect(flowIn.Id);
+                flowOutConnections.Connect(flowOut.Id, flowIn.Id);
         }
 
         public void Disconnect(IPort output, IPort input)
         {
             if (input is IValuePort valueIn && output is IValuePort valueOut)
-                valueIn.Disconnect(valueOut.Id);
+                valueInConnections.Disconnect(valueIn.Id, valueOut.Id);
             if (input is IFlowPort flowIn && output is IFlowPort flowOut)
-                flowOut.Disconnect(flowIn.Id);
+                flowOutConnections.Disconnect(flowOut.Id, flowIn.Id);
         }
-
-        // public IValuePort GetValuePort(PortId id, PortDirection direction)
-        // {
-        //     var node = GetNode(id.Node);
-        //     switch (direction)
-        //     {
-        //         case PortDirection.Input:
-        //             return node.ValueInPorts[id.Port];
-        //         case PortDirection.Output:
-        //             return node.ValueOutPorts[id.Port];
-        //         default:
-        //             return null;
-        //     }
-        // }
-        //
-        // public IFlowPort GetFlowPort(PortId id, PortDirection direction)
-        // {
-        //     var node = GetNode(id.Node);
-        //     switch (direction)
-        //     {
-        //         case PortDirection.Input:
-        //             return node.FlowInPorts[id.Port];
-        //         case PortDirection.Output:
-        //             return node.FlowOutPorts[id.Port];
-        //         default:
-        //             return null;
-        //     }
-        // }
     }
 }

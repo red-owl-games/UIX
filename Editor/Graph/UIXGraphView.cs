@@ -6,7 +6,6 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 using NodeView = UnityEditor.Experimental.GraphView.Node;
-using Port = RedOwl.UIX.Engine.Port;
 using PortView = UnityEditor.Experimental.GraphView.Port;
 
 
@@ -34,6 +33,7 @@ namespace RedOwl.UIX.Editor
             // This is to prepare for Undo's
             _serializedGraph = new SerializedObject(asset);
             _graph = asset.graph;
+            _graph.Definition();
             _graph.Initialize();
             _nodeViewCache = new Dictionary<string, UIXNodeView>(_graph.NodeCount);
 
@@ -84,11 +84,32 @@ namespace RedOwl.UIX.Editor
 
         private void CreateConnections()
         {
-            foreach (var view in _nodeViewCache.Values)
+            // TODO: Needs Refactor
+            foreach (var node in _graph.Nodes)
             {
-                foreach (var edge in view.CreateConnections(_nodeViewCache))
+                var view = _nodeViewCache[node.NodeId];
+                foreach (var valueIn in node.ValueInPorts.Values)
                 {
-                    AddElement(edge);
+                    foreach (var connection in _graph.ValueInConnections.SafeGet(valueIn.Id))
+                    {
+                        if (!_nodeViewCache.TryGetValue(connection.Node, out var outputView)) continue;
+                        var inputPort = view.inputContainer.Q<PortView>(valueIn.Id.Port);
+                        var outputPort = outputView.outputContainer.Q<PortView>(connection.Port);
+                        if (inputPort != null && outputPort != null) 
+                            AddElement(outputPort.ConnectTo(inputPort));
+                    }
+                }
+                if (!(node is IFlowNode flowNode)) continue;
+                foreach (var flowOut in flowNode.FlowOutPorts.Values)
+                {
+                    foreach (var connection in _graph.FlowOutConnections.SafeGet(flowOut.Id))
+                    {
+                        if (!_nodeViewCache.TryGetValue(connection.Node, out var inputView)) continue;
+                        var inputPort = inputView.FlowInPortContainer.Q<PortView>(connection.Port);
+                        var outputPort = view.FlowOutPortContainer.Q<PortView>(flowOut.Id.Port);
+                        if (inputPort != null && outputPort != null)
+                            AddElement(outputPort.ConnectTo(inputPort));
+                    }
                 }
             }
         }
@@ -191,9 +212,9 @@ namespace RedOwl.UIX.Editor
         {
             Undo.RecordObject(_graphAsset, "Create Node");
             var node = (INode)Activator.CreateInstance(data.Type);
+            _graph.Add(node); // Definition & Initialize are called here
             var window = EditorWindow.GetWindow<UIXGraphWindow>();
             node.NodePosition = window.rootVisualElement.ChangeCoordinatesTo(contentViewContainer, position - window.position.position - new Vector2(3, 26));
-            _graph.Add(node);
             CreateNodeView(node);
             SaveAsset();
         }

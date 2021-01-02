@@ -1,30 +1,20 @@
 using System.Collections;
+using UnityEngine.Scripting;
 
 namespace RedOwl.UIX.Engine
 {
     [Node("Flow", Path = "Flow Control")]
-    public class LoopNode : Node
+    public class LoopNode : FlowNode
     {
-        [FlowIn(Callback = nameof(OnEnter))] public FlowPort Enter;
+        [FlowIn(nameof(OnEnter))] public FlowPort Enter;
         [FlowOut] public FlowPort Exit;
 
-        public int count;
-        
-        public LoopNode()
-        {
-            Enter = new FlowPort(this);
-            Exit = new FlowPort(this);
-        }
-        
-        public override void Definition()
-        {
-            
-        }
-        
+        [ValueIn] public ValuePort<int> Count;
+
         private IEnumerator OnEnter(IFlow flow)
         {
             int times = 0;
-            while (times < count)
+            while (times < Count.Value)
             {
                 yield return Exit;
                 times += 1;

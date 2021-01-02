@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RedOwl.UIX.Engine
@@ -9,24 +10,36 @@ namespace RedOwl.UIX.Engine
     [Serializable]
     public class ConnectionsGraph : BetterDictionary<PortId, PortCollection>
     {
-        public void Connect(PortId output, PortId input)
+        public PortCollection SafeGet(PortId key)
         {
-            if (TryGetValue(output, out var collection))
+            try
             {
-                collection.Add(input);
+                return this[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                return new PortCollection();
+            }
+        }
+        
+        public void Connect(PortId key, PortId port)
+        {
+            if (TryGetValue(key, out var collection))
+            {
+                collection.Add(port);
                 return;
             }
 
-            collection = new PortCollection{input};
-            Add(output, collection);
+            collection = new PortCollection{port};
+            Add(key, collection);
         }
 
-        public void Disconnect(PortId output, PortId input)
+        public void Disconnect(PortId key, PortId port)
         {
-            if (TryGetValue(output, out var collection))
+            if (TryGetValue(key, out var collection))
             {
-                collection.Remove(input);
-                this[output] = collection;
+                collection.Remove(port);
+                this[key] = collection;
             }
         }
     }

@@ -27,6 +27,23 @@ namespace RedOwl.UIX.Engine
             Capacity = attr.Capacity;
             ShowElement = info.IsFamily;
         }
+
+        public IValuePort GetOrCreatePort(INode node)
+        {
+            var port = (IValuePort)Info.GetValue(node);
+            if (port == null)
+            {
+                // Debug.Log($"Creating Valueport: '{node}.{Name}'");
+                port = (IValuePort)Activator.CreateInstance(Info.FieldType);
+                Info.SetValue(node, port);
+            }
+            // else
+            // {
+            //     Debug.Log($"Found Existing Valueport: '{node}.{Name}'");
+            // }
+            port.Definition(node, this);
+            return port;
+        }
     }
     
      public class FlowPortSettings : IPortReflectionData
@@ -51,6 +68,24 @@ namespace RedOwl.UIX.Engine
              Capacity = attr.Capacity;
              Callback = methodInfo;
          }
+         
+         public IFlowPort GetOrCreatePort(INode node)
+         {
+             
+             var port = (IFlowPort)Info.GetValue(node);
+             if (port == null)
+             {
+                 // Debug.Log($"Creating Flowport: '{node}.{Name}'");
+                 port = (IFlowPort)Activator.CreateInstance(Info.FieldType);
+                 Info.SetValue(node, port);
+             }
+             // else
+             // {
+             //     Debug.Log($"Found Existing Flowport: '{node}.{Name}'");
+             // }
+             port.Definition(node, this);
+             return port;
+         }
      }
 
     public class UIXNodeReflection : ITypeStorage
@@ -73,7 +108,7 @@ namespace RedOwl.UIX.Engine
         
         public Vector2 Size { get; set; }
         
-        public bool IsRootNode { get; set; }
+        public bool IsFlowRoot { get; set; }
         
         public HashSet<string> Tags { get; set; }
         
@@ -109,7 +144,7 @@ namespace RedOwl.UIX.Engine
             Tags = isNull ? new HashSet<string>() : new HashSet<string>(attr.Tags);
             Deletable = isNull || attr.Deletable;
             Moveable = isNull || attr.Moveable;
-            IsRootNode = isNull ? false : attr.IsRootNode;
+            IsFlowRoot = isNull ? false : attr.IsFlowRoot;
             Size = isNull ? DefaultSize : attr.Size;
         }
 
@@ -202,35 +237,5 @@ namespace RedOwl.UIX.Engine
         public static readonly TypeCache<INode, UIXNodeReflection> NodeCache = new TypeCache<INode, UIXNodeReflection>();
         
         public static readonly TypeCache<IGraph, UIXGraphReflection> GraphCache = new TypeCache<IGraph, UIXGraphReflection>();
-        
-        public static Dictionary<string, IFlowPort> GetFlowPorts<T>(T node, PortDirection direction) where T : INode
-        {
-            if (!NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, IFlowPort>();
-            var output = new Dictionary<string, IFlowPort>(data.FlowPorts.Count);
-            foreach (var port in data.FlowPorts)
-            {
-                if (port.Direction != direction) continue;
-                var newPort = new FlowPort((FlowPort) port.Info.GetValue(node));
-                newPort.Initialize(node, data, port);
-                output.Add(newPort.PortId, newPort); 
-            }
-
-            return output;
-        }
-
-        public static Dictionary<string, IValuePort> GetValuePorts<T>(T node, PortDirection direction) where T : INode
-        {
-            if (!NodeCache.Get(node.GetType(), out var data)) return new Dictionary<string, IValuePort>();
-            var output = new Dictionary<string, IValuePort>(data.ValuePorts.Count);
-            foreach (var port in data.ValuePorts)
-            {
-                if (port.Direction != direction) continue;
-                var newPort = new ValuePort((IValuePort) port.Info.GetValue(node));
-                newPort.Initialize(node, data, port);
-                output.Add(newPort.PortId, newPort);
-            }
-
-            return output;
-        }
     }
 }

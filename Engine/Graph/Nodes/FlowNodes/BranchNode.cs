@@ -3,28 +3,14 @@ using System.Collections;
 namespace RedOwl.UIX.Engine
 {
     [Node("Flow", Path = "Flow Control")]
-    public class BranchNode : Node
+    public class BranchNode : FlowNode
     {
-        [ValueIn] public ValuePort<bool> Condition;
-
-        [FlowIn(Callback = nameof(OnEnter))] public FlowPort Enter;
+        [FlowIn(nameof(OnEnter))] public FlowPort Enter;
 
         [FlowOut] public FlowPort True;
         [FlowOut] public FlowPort False;
         
-        public BranchNode()
-        {
-            Condition = new ValuePort<bool>(this, false);
-            Enter = new FlowPort(this);
-            
-            True = new FlowPort(this);
-            False = new FlowPort(this);
-        }
-        
-        public override void Definition()
-        {
-            
-        }
+        [ValueIn] public ValuePort<bool> Condition = false;
         
         private IFlowPort OnEnter(IFlow flow)
         {
